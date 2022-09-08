@@ -1,0 +1,13 @@
+.DS_Store
+.bsp/
+.idea
+*.iml
+.metals
+.bloop
+
+.settings
+.project
+.classpath
+
+target/
+project
