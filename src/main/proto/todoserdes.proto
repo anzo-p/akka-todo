@@ -1,0 +1,21 @@
+syntax = "proto2";
+
+package todo;
+
+option java_package = "todo";
+
+message TodoTaskProto {
+  required string userId = 1;
+  required string todoTaskId = 2;
+  optional string title = 3;
+  optional int32 priorityOrder = 4;
+  optional bool completed = 5;
+}
+
+message TodoListAddedProto {
+  required TodoTaskProto todo = 1;
+}
+
+message InMemoryTodoTasksProto {
+  map<string, TodoTaskProto> state = 1;
+}
