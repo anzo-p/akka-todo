@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Route
 import scala.concurrent.ExecutionContextExecutor
 import scala.util._
 
-object Main extends App with TodoHandler with TodoRoutes {
+object Main extends App with TodoHandlerResolver with TodoRoutes {
 
   implicit val system: ActorSystem                = ActorSystem()
   implicit val executor: ExecutionContextExecutor = system.dispatcher

@@ -3,9 +3,9 @@ package me.anzop.todo
 import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import akka.util.Timeout
-import todo.Todoserdes.{InMemoryTodoTasksProto, TodoListAddedProto, TodoTaskProto}
+import me.anzop.todo.TodoSerializer.{fromProto, toProto}
+import me.anzop.todo.todoProtocol.{TodoActorStateProto, TodoTaskProto}
 
-import java.util
 import scala.concurrent.duration.DurationInt
 
 object TodoHandlerActor {
@@ -13,10 +13,6 @@ object TodoHandlerActor {
   case object GetAllTodoLists extends Command
   case class AddTodoList(todo: TodoTaskParams) extends Command
   case class UpdateTodoList(todoId: String, todo: TodoTaskParams) extends Command
-
-  sealed trait Event
-  //case class TodoListAdded(todo: TodoTaskProto) extends Event
-  //case class TodoListUpdated(todo: TodoTaskProto) extends Event
   case object Shutdown
 }
 
@@ -25,74 +21,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   implicit val timeout: Timeout = 10 seconds
 
-  override def snapshotInterval: Int = 2
+  override def snapshotInterval: Int = 10
 
   override def persistenceId: String = s"todo-actor-$userId"
-
-  def serialize(todo: TodoTask): TodoListAddedProto = {
-    TodoListAddedProto
-      .newBuilder()
-      .setTodo(
-        TodoTaskProto
-          .newBuilder()
-          .setUserId(todo.userId)
-          .setTodoTaskId(todo.todoTaskId)
-          .setTitle(todo.title)
-          .setPriorityOrder(todo.priorityOrder)
-          .setCompleted(todo.completed)
-      )
-      .build()
-  }
-
-  def deserialize(todo: TodoListAddedProto): TodoTask = {
-    val proto: TodoTaskProto = todo.getTodo
-    TodoTask(
-      proto.getUserId,
-      proto.getTodoTaskId,
-      proto.getTitle,
-      proto.getPriorityOrder,
-      proto.getCompleted
-    )
-  }
-
-  def stateSer(state: Map[String, TodoTask]): InMemoryTodoTasksProto = {
-    def f(task: TodoTask) = TodoTaskProto
-      .newBuilder()
-      .setUserId(task.userId)
-      .setTodoTaskId(task.todoTaskId)
-      .setTitle(task.title)
-      .setPriorityOrder(task.priorityOrder)
-      .setCompleted(task.completed)
-      .build()
-
-    var protoState = new java.util.HashMap[String, TodoTaskProto]
-    state.foreach { entry =>
-      protoState.put(entry._1, f(entry._2))
-    }
-
-    InMemoryTodoTasksProto
-      .newBuilder()
-      .putAllState(protoState)
-      .build()
-  }
-
-  def stateDeser(state: InMemoryTodoTasksProto): Map[String, TodoTask] = {
-    import scala.collection.JavaConverters._
-
-    var loadState: Map[String, TodoTask] = Map()
-
-    state.getStateMap.asScala.mapValues { entry =>
-      val a = TodoTask(
-        entry.getUserId,
-        entry.getTodoTaskId,
-        entry.getTitle,
-        entry.getPriorityOrder,
-        entry.getCompleted
-      )
-      loadState += a.todoTaskId -> a
-    }
-    loadState
-  }
 
   var state: Map[String, TodoTask] = Map()
 
@@ -102,58 +33,41 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
     case AddTodoList(params) =>
       val todo = TodoTask(params).copy(userId = userId)
-      /*
-        serialize
-        received TodoTaskParams
-        that were created into TodoTask
-        into TodoListAddedProto
-
-        somehow this seems overly complex
-       */
-      persist(serialize(todo)) { _ =>
+      persist(toProto(todo)) { _ =>
         state += (todo.todoTaskId -> todo)
         sender() ! state.values
         if (maybeSnapshot) {
-          log.info(s"snapshot due")
-          saveSnapshot(stateSer(state))
+          saveSnapshot(toProto(state))
         }
       }
 
-    case UpdateTodoList(id, params) =>
-      state.get(id) match {
-        case Some(curTodo) =>
-          val todo = TodoTask(curTodo, params)
-          persist(serialize(todo)) { _ =>
-            state += (todo.todoTaskId -> todo)
-            sender() ! state.values
-            if (maybeSnapshot) {
-              saveSnapshot(state)
-            }
-          }
-
-        case _ =>
-      }
-
     case SaveSnapshotSuccess(metadata) =>
-      log.info("snapshot successful move on")
-
-    case SaveSnapshotFailure(metadata, cause) =>
-      log.info("snapshot failed but we still move on")
+    case SaveSnapshotFailure(_, reason) =>
+      log.warning(s"Save snapshot failed on: $reason")
 
     case Shutdown =>
       context.stop(self)
   }
 
   override def receiveRecover: Receive = {
-    case SnapshotOffer(_, payload) =>
-      state = stateDeser(payload.asInstanceOf[InMemoryTodoTasksProto])
+    case SnapshotOffer(_, snapshot: TodoActorStateProto) =>
+      state = fromProto(snapshot)
+      log.info(s"from snapshots alles ok")
 
-    case event: TodoListAddedProto =>
-      val todo = deserialize(event)
-      state += todo.todoTaskId -> todo
+    case data: TodoTaskProto =>
+      val todo = fromProto(data)
+      state += (todo.todoTaskId -> todo)
+      log.info(s"from replay events alles ok")
+  }
 
-    //case TodoListUpdated(todoProto) =>
-    //  val todo = deserialize(todoProto)
-    //  state += (todo.todoTaskId -> todo)
+  override def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit = {
+    log.info(s"persistence failure because $cause")
+    // restart actor - see supervising strategies with backoff
+    super.onPersistFailure(cause, event, seqNr)
+  }
+
+  override def onPersistRejected(cause: Throwable, event: Any, seqNr: Long): Unit = {
+    log.info(s"persistence rejected because $cause")
+    super.onPersistRejected(cause, event, seqNr)
   }
 }

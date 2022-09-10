@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package me.anzop.todo;
+
+message TodoTaskProto {
+  string userId = 1;
+  string todoTaskId = 2;
+  string title = 3;
+  int32 priorityOrder = 4;
+  bool completed = 5;
+}
+
+message TodoActorStateProto {
+  map<string, TodoTaskProto> state = 1;
+}
