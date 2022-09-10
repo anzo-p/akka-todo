@@ -1,6 +1,7 @@
 package me.anzop.todo
 
 import akka.serialization.SerializerWithStringManifest
+import me.anzop.todo.TodoHandlerActor.TodoActorState
 import me.anzop.todo.todoProtocol.{TodoActorStateProto, TodoTaskProto}
 import scalapb.GeneratedMessage
 
@@ -36,7 +37,7 @@ object TodoSerializer {
       priorityOrder = todo.priorityOrder
     )
 
-  def toProto(state: Map[String, TodoTask]): TodoActorStateProto =
+  def toProto(state: TodoActorState): TodoActorStateProto =
     TodoActorStateProto.of(state.transform { (_, v) =>
       TodoTaskProto.of(
         userId        = v.userId,
@@ -47,7 +48,7 @@ object TodoSerializer {
       )
     })
 
-  def fromProto(proto: TodoActorStateProto): Map[String, TodoTask] =
+  def fromProto(proto: TodoActorStateProto): TodoActorState =
     proto.state.transform { (_, v) =>
       TodoTask(
         v.userId,

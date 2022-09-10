@@ -14,6 +14,8 @@ object TodoHandlerActor {
   case class AddTodoList(todo: TodoTaskParams) extends Command
   case class UpdateTodoList(todoId: String, todo: TodoTaskParams) extends Command
   case object Shutdown
+
+  type TodoActorState = Map[String, TodoTask]
 }
 
 class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging with SnapShooter {
@@ -25,7 +27,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   override def persistenceId: String = s"todo-actor-$userId"
 
-  var state: Map[String, TodoTask] = Map()
+  var state: TodoActorState = Map()
 
   override def receiveCommand: Receive = {
     case GetAllTodoLists =>
