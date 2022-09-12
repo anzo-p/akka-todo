@@ -28,20 +28,31 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   override def persistenceId: String = s"todo-actor-$userId"
 
-  var state: TodoActorState = Map()
+  protected var state: TodoActorState = Map()
+
+  private def addTask(todo: TodoTask): Unit =
+    state += todo.taskId -> todo
+
+  private def sortByPriority(todos: Iterable[TodoTask]): Iterable[TodoTask] =
+    todos.toList.sortBy(_.priority)
+
+  private def sortByTitle(todos: Iterable[TodoTask]): Iterable[TodoTask] =
+    todos.toList.sortBy(_.title)
 
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
-      sender() ! state.values
+      sender() ! sortByPriority(state.values)
 
     case GetTodoTasksByTitle(querySting) =>
-      sender() ! state.values.filter(_.title contains querySting)
+      sender() ! sortByTitle {
+        state.values.filter(_.title contains querySting)
+      }
 
     case AddTodoTask(params) =>
       val todo = TodoTask(params).copy(userId = userId)
       persist(toProto(todo)) { _ =>
-        state += (todo.taskId -> todo)
-        sender() ! state.values
+        addTask(todo)
+        sender() ! todo
         if (maybeSnapshot) {
           saveSnapshot(toProto(state))
         }
@@ -61,8 +72,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
       log.info(s"from snapshots alles ok")
 
     case data: TodoTaskProto =>
-      val todo = fromProto(data)
-      state += (todo.taskId -> todo)
+      addTask(fromProto(data))
       log.info(s"from replay events alles ok")
   }
 

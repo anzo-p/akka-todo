@@ -24,26 +24,26 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
       `Access-Control-Allow-Headers`("Accept", "Content-Type"),
       `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH)
     ) {
-      pathPrefix("todos" / Segment) { id =>
+      pathPrefix("todos" / Segment) { user =>
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
-              onSuccess(todoHandler(id) ? TodoHandlerActor.GetTodoTasksByTitle(title)) { todos =>
+              onSuccess(todoHandler(user) ? TodoHandlerActor.GetTodoTasksByTitle(title)) { todos =>
                 val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
                 complete(StatusCodes.OK, body)
               }
             }
           } ~ get {
-            onSuccess(todoHandler(id) ? TodoHandlerActor.GetAllTodoTasks) { todos =>
+            onSuccess(todoHandler(user) ? TodoHandlerActor.GetAllTodoTasks) { todos =>
               val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
               complete(StatusCodes.OK, body)
             }
-          }
-        } ~ post {
-          entity(as[TodoTaskDto]) { input =>
-            onSuccess(todoHandler(id) ? TodoHandlerActor.AddTodoTask(input.toParams)) { todos =>
-              val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
-              complete(StatusCodes.OK, body)
+          } ~ post {
+            entity(as[TodoTaskDto]) { input =>
+              onSuccess(todoHandler(user) ? TodoHandlerActor.AddTodoTask(input.toParams)) { todo =>
+                val body = TodoTaskDto.fromModel(todo.asInstanceOf[TodoTask])
+                complete(StatusCodes.OK, body)
+              }
             }
           }
         }
