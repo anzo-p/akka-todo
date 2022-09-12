@@ -59,6 +59,18 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
                 }
               }
             }
+          } ~ pathPrefix("complete") {
+            pathEndOrSingleSlash {
+              patch {
+                onSuccess(todoHandler(user) ? TodoHandlerActor.UpdateCompleted(task)) { success =>
+                  if (success.asInstanceOf[Boolean]) {
+                    complete(StatusCodes.OK)
+                  } else {
+                    complete(StatusCodes.NotFound)
+                  }
+                }
+              }
+            }
           }
         }
       }

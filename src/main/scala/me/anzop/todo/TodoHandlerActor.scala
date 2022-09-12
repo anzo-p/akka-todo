@@ -4,7 +4,12 @@ import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import akka.util.Timeout
 import me.anzop.todo.TodoSerializer.{fromProtobuf, toProtobuf}
-import me.anzop.todo.todoProtocol.{TodoActorStateProto, TodoTaskProto, TodoTaskSetPriorityProto}
+import me.anzop.todo.todoProtocol.{
+  TodoActorStateProto,
+  TodoTaskProto,
+  TodoTaskSetCompletedProto,
+  TodoTaskSetPriorityProto
+}
 
 import scala.concurrent.duration.DurationInt
 
@@ -14,6 +19,7 @@ object TodoHandlerActor {
   case class GetTodoTasksByTitle(querySting: String) extends Command
   case class AddTodoTask(todo: TodoTaskParams) extends Command
   case class UpdatePriority(taskId: String, priority: Integer) extends Command
+  case class UpdateCompleted(taskId: String) extends Command
   case object Shutdown
 
   type TodoActorState = Map[String, TodoTask]
@@ -39,6 +45,15 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         false
       case Some(task) =>
         state += taskId -> task.copy(priority = priority)
+        true
+    }
+
+  private def setCompleted(taskId: String): Boolean =
+    state.get(taskId) match {
+      case None =>
+        false
+      case Some(task) =>
+        state += taskId -> task.copy(completed = true)
         true
     }
 
@@ -75,6 +90,14 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         }
       }
 
+    case UpdateCompleted(taskId) =>
+      persist(TodoTaskSetCompletedProto(taskId)) { _ =>
+        sender() ! setCompleted(taskId)
+        if (maybeSnapshot) {
+          saveSnapshot(toProtobuf(state))
+        }
+      }
+
     case SaveSnapshotSuccess(_) =>
     case SaveSnapshotFailure(_, reason) =>
       log.warning(s"Save snapshot failed on: $reason")
@@ -94,6 +117,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
     case data: TodoTaskSetPriorityProto =>
       setPriority(data.taskId, data.newPriority)
+
+    case data: TodoTaskSetCompletedProto =>
+      setCompleted(data.taskId)
   }
 
   override def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit = {

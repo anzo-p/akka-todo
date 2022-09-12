@@ -15,6 +15,10 @@ message TodoTaskSetPriorityProto {
   int32 newPriority = 2;
 }
 
+message TodoTaskSetCompletedProto {
+  string taskId = 1;
+}
+
 message TodoActorStateProto {
   map<string, TodoTaskProto> state = 1;
 }

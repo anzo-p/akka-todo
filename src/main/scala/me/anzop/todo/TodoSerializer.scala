@@ -2,7 +2,12 @@ package me.anzop.todo
 
 import akka.serialization.SerializerWithStringManifest
 import me.anzop.todo.TodoHandlerActor.TodoActorState
-import me.anzop.todo.todoProtocol.{TodoActorStateProto, TodoTaskProto, TodoTaskSetPriorityProto}
+import me.anzop.todo.todoProtocol.{
+  TodoActorStateProto,
+  TodoTaskProto,
+  TodoTaskSetCompletedProto,
+  TodoTaskSetPriorityProto
+}
 import scalapb.GeneratedMessage
 
 class TodoSerializer extends SerializerWithStringManifest {
@@ -11,9 +16,10 @@ class TodoSerializer extends SerializerWithStringManifest {
   override def identifier: Int = 12345
 
   override def manifest(o: AnyRef): String = o match {
-    case _: TodoActorStateProto      => TodoTaskSnapShotManifest
-    case _: TodoTaskProto            => TodoTaskAddManifest
-    case _: TodoTaskSetPriorityProto => TodoTaskUpdatePriorityManifest
+    case _: TodoActorStateProto       => TodoTaskSnapShotManifest
+    case _: TodoTaskProto             => TodoTaskAddManifest
+    case _: TodoTaskSetPriorityProto  => TodoTaskUpdatePriorityManifest
+    case _: TodoTaskSetCompletedProto => TodoTaskCompleteTaskManifest
   }
 
   override def toBinary(o: AnyRef): Array[Byte] = o.asInstanceOf[GeneratedMessage].toByteArray
@@ -23,6 +29,7 @@ class TodoSerializer extends SerializerWithStringManifest {
       case TodoTaskSnapShotManifest       => TodoActorStateProto.parseFrom(bytes)
       case TodoTaskAddManifest            => TodoTaskProto.parseFrom(bytes)
       case TodoTaskUpdatePriorityManifest => TodoTaskSetPriorityProto.parseFrom(bytes)
+      case TodoTaskCompleteTaskManifest   => TodoTaskSetCompletedProto.parseFrom(bytes)
     }
 }
 
@@ -30,6 +37,7 @@ object TodoSerializer {
   final val TodoTaskSnapShotManifest       = classOf[TodoActorStateProto].getName
   final val TodoTaskAddManifest            = classOf[TodoTaskProto].getName
   final val TodoTaskUpdatePriorityManifest = classOf[TodoTaskSetPriorityProto].getName
+  final val TodoTaskCompleteTaskManifest   = classOf[TodoTaskSetCompletedProto].getName
 
   def toProtobuf(todo: TodoTask): TodoTaskProto =
     TodoTaskProto(
