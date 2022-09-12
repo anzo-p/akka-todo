@@ -26,6 +26,7 @@ class TodoSerializer extends SerializerWithStringManifest {
       case TodoTaskAddManifest          => TodoTaskProto.parseFrom(bytes)
       case TodoTaskSetPriorityManifest  => TodoTaskSetPriorityProto.parseFrom(bytes)
       case TodoTaskSetCompletedManifest => TodoTaskSetCompletedProto.parseFrom(bytes)
+      case TodoTaskSetRemovedManifest   => TodoTaskSetRemovedProto.parseFrom(bytes)
     }
 }
 
