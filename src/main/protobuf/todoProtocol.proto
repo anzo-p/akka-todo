@@ -4,9 +4,9 @@ package me.anzop.todo;
 
 message TodoTaskProto {
   string userId = 1;
-  string todoTaskId = 2;
+  string taskId = 2;
   string title = 3;
-  int32 priorityOrder = 4;
+  int32 priority = 4;
   bool completed = 5;
 }
 

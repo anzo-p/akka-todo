@@ -10,9 +10,9 @@ import scala.concurrent.duration.DurationInt
 
 object TodoHandlerActor {
   sealed trait Command
-  case object GetAllTodoLists extends Command
-  case class AddTodoList(todo: TodoTaskParams) extends Command
-  case class UpdateTodoList(todoId: String, todo: TodoTaskParams) extends Command
+  case object GetAllTodoTasks extends Command
+  case class AddTodoTask(todo: TodoTaskParams) extends Command
+  case class UpdateTodoTask(taskId: String, todo: TodoTaskParams) extends Command
   case object Shutdown
 
   type TodoActorState = Map[String, TodoTask]
@@ -30,13 +30,13 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   var state: TodoActorState = Map()
 
   override def receiveCommand: Receive = {
-    case GetAllTodoLists =>
+    case GetAllTodoTasks =>
       sender() ! state.values
 
-    case AddTodoList(params) =>
+    case AddTodoTask(params) =>
       val todo = TodoTask(params).copy(userId = userId)
       persist(toProto(todo)) { _ =>
-        state += (todo.todoTaskId -> todo)
+        state += (todo.taskId -> todo)
         sender() ! state.values
         if (maybeSnapshot) {
           saveSnapshot(toProto(state))
@@ -58,7 +58,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
     case data: TodoTaskProto =>
       val todo = fromProto(data)
-      state += (todo.todoTaskId -> todo)
+      state += (todo.taskId -> todo)
       log.info(s"from replay events alles ok")
   }
 

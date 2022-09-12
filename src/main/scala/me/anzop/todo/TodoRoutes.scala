@@ -29,14 +29,14 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
       (pathPrefix("todos") & path(Segment)) { id =>
         pathEnd {
           get {
-            onSuccess(todoHandler(id) ? TodoHandlerActor.GetAllTodoLists) { todos =>
+            onSuccess(todoHandler(id) ? TodoHandlerActor.GetAllTodoTasks) { todos =>
               val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
               complete(StatusCodes.OK, body)
             }
           }
         } ~ post {
           entity(as[TodoTaskDto]) { input =>
-            onSuccess(todoHandler(id) ? TodoHandlerActor.AddTodoList(input.toParams)) { todos =>
+            onSuccess(todoHandler(id) ? TodoHandlerActor.AddTodoTask(input.toParams)) { todos =>
               val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
               complete(StatusCodes.OK, body)
             }

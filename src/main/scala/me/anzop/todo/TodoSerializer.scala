@@ -30,21 +30,21 @@ object TodoSerializer {
 
   def toProto(todo: TodoTask): TodoTaskProto =
     TodoTaskProto(
-      userId        = todo.userId,
-      todoTaskId    = todo.todoTaskId,
-      title         = todo.title,
-      completed     = todo.completed,
-      priorityOrder = todo.priorityOrder
+      userId    = todo.userId,
+      taskId    = todo.taskId,
+      title     = todo.title,
+      completed = todo.completed,
+      priority  = todo.priority
     )
 
   def toProto(state: TodoActorState): TodoActorStateProto =
     TodoActorStateProto.of(state.transform { (_, v) =>
       TodoTaskProto.of(
-        userId        = v.userId,
-        todoTaskId    = v.todoTaskId,
-        title         = v.title,
-        priorityOrder = v.priorityOrder,
-        completed     = v.completed
+        userId    = v.userId,
+        taskId    = v.taskId,
+        title     = v.title,
+        priority  = v.priority,
+        completed = v.completed
       )
     })
 
@@ -52,19 +52,19 @@ object TodoSerializer {
     proto.state.transform { (_, v) =>
       TodoTask(
         v.userId,
-        v.todoTaskId,
+        v.taskId,
         v.title,
-        v.priorityOrder,
+        v.priority,
         v.completed
       )
     }
 
   def fromProto(proto: TodoTaskProto): TodoTask =
     TodoTask(
-      userId        = proto.userId,
-      todoTaskId    = proto.todoTaskId,
-      title         = proto.title,
-      completed     = proto.completed,
-      priorityOrder = proto.priorityOrder
+      userId    = proto.userId,
+      taskId    = proto.taskId,
+      title     = proto.title,
+      completed = proto.completed,
+      priority  = proto.priority
     )
 }
