@@ -11,6 +11,7 @@ import scala.concurrent.duration.DurationInt
 object TodoHandlerActor {
   sealed trait Command
   case object GetAllTodoTasks extends Command
+  case class GetTodoTasksByTitle(querySting: String) extends Command
   case class AddTodoTask(todo: TodoTaskParams) extends Command
   case class UpdateTodoTask(taskId: String, todo: TodoTaskParams) extends Command
   case object Shutdown
@@ -32,6 +33,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
       sender() ! state.values
+
+    case GetTodoTasksByTitle(querySting) =>
+      sender() ! state.values.filter(_.title contains querySting)
 
     case AddTodoTask(params) =>
       val todo = TodoTask(params).copy(userId = userId)

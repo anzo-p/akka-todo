@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.headers.{
   `Access-Control-Allow-Methods`,
   `Access-Control-Allow-Origin`
 }
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{parameter, _}
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
@@ -19,16 +19,21 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
   implicit val timeout: Timeout = 2 seconds
 
   def todoRoutes: Route = {
-    (
-      respondWithHeaders(
-        `Access-Control-Allow-Origin`.`*`,
-        `Access-Control-Allow-Headers`("Accept", "Content-Type"),
-        `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH)
-      ) & extract(_.request.getUri())
-    ) { uri =>
-      (pathPrefix("todos") & path(Segment)) { id =>
-        pathEnd {
-          get {
+    respondWithHeaders(
+      `Access-Control-Allow-Origin`.`*`,
+      `Access-Control-Allow-Headers`("Accept", "Content-Type"),
+      `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH)
+    ) {
+      pathPrefix("todos" / Segment) { id =>
+        pathEndOrSingleSlash {
+          parameter('title) { title =>
+            get {
+              onSuccess(todoHandler(id) ? TodoHandlerActor.GetTodoTasksByTitle(title)) { todos =>
+                val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
+                complete(StatusCodes.OK, body)
+              }
+            }
+          } ~ get {
             onSuccess(todoHandler(id) ? TodoHandlerActor.GetAllTodoTasks) { todos =>
               val body = todos.asInstanceOf[Iterable[TodoTask]].map(todo => TodoTaskDto.fromModel(todo))
               complete(StatusCodes.OK, body)
@@ -43,11 +48,6 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
           }
         }
       }
-    } ~
-      path("") {
-        get {
-          complete(StatusCodes.NotFound)
-        }
-      }
+    }
   }
 }
