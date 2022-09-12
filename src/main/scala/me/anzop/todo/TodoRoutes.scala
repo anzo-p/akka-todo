@@ -46,6 +46,20 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
               }
             }
           }
+        } ~ pathPrefix("task" / Segment) { task =>
+          pathPrefix("priority" / IntNumber) { priority =>
+            pathEndOrSingleSlash {
+              patch {
+                onSuccess(todoHandler(user) ? TodoHandlerActor.UpdatePriority(task, priority)) { success =>
+                  if (success.asInstanceOf[Boolean]) {
+                    complete(StatusCodes.OK)
+                  } else {
+                    complete(StatusCodes.NotFound)
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }

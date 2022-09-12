@@ -10,6 +10,11 @@ message TodoTaskProto {
   bool completed = 5;
 }
 
+message TodoTaskSetPriorityProto {
+  string taskId = 1;
+  int32 newPriority = 2;
+}
+
 message TodoActorStateProto {
   map<string, TodoTaskProto> state = 1;
 }
