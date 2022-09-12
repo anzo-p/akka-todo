@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.headers.{
   `Access-Control-Allow-Origin`
 }
 import akka.http.scaladsl.server.Directives.{parameter, _}
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Route, StandardRoute}
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -17,6 +17,13 @@ import scala.concurrent.duration.DurationInt
 trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
 
   implicit val timeout: Timeout = 2 seconds
+
+  def okOrNotFound(success: Boolean): StandardRoute =
+    if (success) {
+      complete(StatusCodes.OK)
+    } else {
+      complete(StatusCodes.NotFound)
+    }
 
   def todoRoutes: Route = {
     respondWithHeaders(
@@ -51,11 +58,7 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
             pathEndOrSingleSlash {
               patch {
                 onSuccess(todoHandler(user) ? TodoHandlerActor.UpdatePriority(task, priority)) { success =>
-                  if (success.asInstanceOf[Boolean]) {
-                    complete(StatusCodes.OK)
-                  } else {
-                    complete(StatusCodes.NotFound)
-                  }
+                  okOrNotFound(success.asInstanceOf[Boolean])
                 }
               }
             }
@@ -63,22 +66,14 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
             pathEndOrSingleSlash {
               patch {
                 onSuccess(todoHandler(user) ? TodoHandlerActor.UpdateCompleted(task)) { success =>
-                  if (success.asInstanceOf[Boolean]) {
-                    complete(StatusCodes.OK)
-                  } else {
-                    complete(StatusCodes.NotFound)
-                  }
+                  okOrNotFound(success.asInstanceOf[Boolean])
                 }
               }
             }
           } ~ pathEndOrSingleSlash {
             delete {
               onSuccess(todoHandler(user) ? TodoHandlerActor.RemoveTask(task)) { success =>
-                if (success.asInstanceOf[Boolean]) {
-                  complete(StatusCodes.OK)
-                } else {
-                  complete(StatusCodes.NotFound)
-                }
+                okOrNotFound(success.asInstanceOf[Boolean])
               }
             }
           }

@@ -71,6 +71,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   private def sortByTitle(todos: Iterable[TodoTask]): Iterable[TodoTask] =
     todos.toList.sortBy(_.title)
 
+  private def maybeSaveSnapshot(): Unit =
+    if (maybeSnapshotDue) saveSnapshot(toProtobuf(state))
+
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
       sender() ! sortByPriority(getTasks)
@@ -85,33 +88,25 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
       persist(toProtobuf(todo)) { _ =>
         addTask(todo)
         sender() ! todo
-        if (maybeSnapshot) {
-          saveSnapshot(toProtobuf(state))
-        }
+        maybeSaveSnapshot()
       }
 
     case UpdatePriority(taskId, priority) =>
       persist(TodoTaskSetPriorityProto(taskId, priority)) { _ =>
         sender() ! setPriority(taskId, priority)
-        if (maybeSnapshot) {
-          saveSnapshot(toProtobuf(state))
-        }
+        maybeSaveSnapshot()
       }
 
     case UpdateCompleted(taskId) =>
       persist(TodoTaskSetCompletedProto(taskId)) { _ =>
         sender() ! setCompleted(taskId)
-        if (maybeSnapshot) {
-          saveSnapshot(toProtobuf(state))
-        }
+        maybeSaveSnapshot()
       }
 
     case RemoveTask(taskId) =>
       persist(TodoTaskSetRemovedProto(taskId)) { _ =>
         sender() ! setRemoved(taskId)
-        if (maybeSnapshot) {
-          saveSnapshot(toProtobuf(state))
-        }
+        maybeSaveSnapshot()
       }
 
     case SaveSnapshotSuccess(_) =>
