@@ -8,6 +8,7 @@ message TodoTaskProto {
   string title = 3;
   int32 priority = 4;
   bool completed = 5;
+  bool removed = 6;
 }
 
 message TodoTaskSetPriorityProto {
@@ -16,6 +17,10 @@ message TodoTaskSetPriorityProto {
 }
 
 message TodoTaskSetCompletedProto {
+  string taskId = 1;
+}
+
+message TodoTaskSetRemovedProto {
   string taskId = 1;
 }
 

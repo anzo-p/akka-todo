@@ -1,6 +1,6 @@
 package me.anzop.todo
 
-import akka.http.scaladsl.model.HttpMethods.{GET, PATCH, POST, PUT}
+import akka.http.scaladsl.model.HttpMethods.{DELETE, GET, PATCH, POST, PUT}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{
   `Access-Control-Allow-Headers`,
@@ -22,7 +22,7 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
     respondWithHeaders(
       `Access-Control-Allow-Origin`.`*`,
       `Access-Control-Allow-Headers`("Accept", "Content-Type"),
-      `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH)
+      `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH, DELETE)
     ) {
       pathPrefix("todos" / Segment) { user =>
         pathEndOrSingleSlash {
@@ -68,6 +68,16 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
                   } else {
                     complete(StatusCodes.NotFound)
                   }
+                }
+              }
+            }
+          } ~ pathEndOrSingleSlash {
+            delete {
+              onSuccess(todoHandler(user) ? TodoHandlerActor.RemoveTask(task)) { success =>
+                if (success.asInstanceOf[Boolean]) {
+                  complete(StatusCodes.OK)
+                } else {
+                  complete(StatusCodes.NotFound)
                 }
               }
             }

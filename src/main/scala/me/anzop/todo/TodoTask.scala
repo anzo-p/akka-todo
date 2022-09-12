@@ -7,7 +7,8 @@ case class TodoTask(
     taskId: String,
     title: String      = "",
     priority: Int      = 0,
-    completed: Boolean = false
+    completed: Boolean = false,
+    removed: Boolean   = false
   )
 
 object TodoTask {
@@ -25,6 +26,7 @@ object TodoTask {
       taskId    = item.taskId,
       title     = params.title,
       priority  = params.priority.getOrElse(item.priority),
-      completed = params.completed.getOrElse(item.completed)
+      completed = params.completed.getOrElse(item.completed),
+      removed   = params.completed.getOrElse(item.removed)
     )
 }

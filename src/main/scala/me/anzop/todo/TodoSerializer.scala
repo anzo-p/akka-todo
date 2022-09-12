@@ -2,12 +2,7 @@ package me.anzop.todo
 
 import akka.serialization.SerializerWithStringManifest
 import me.anzop.todo.TodoHandlerActor.TodoActorState
-import me.anzop.todo.todoProtocol.{
-  TodoActorStateProto,
-  TodoTaskProto,
-  TodoTaskSetCompletedProto,
-  TodoTaskSetPriorityProto
-}
+import me.anzop.todo.todoProtocol._
 import scalapb.GeneratedMessage
 
 class TodoSerializer extends SerializerWithStringManifest {
@@ -18,44 +13,48 @@ class TodoSerializer extends SerializerWithStringManifest {
   override def manifest(o: AnyRef): String = o match {
     case _: TodoActorStateProto       => TodoTaskSnapShotManifest
     case _: TodoTaskProto             => TodoTaskAddManifest
-    case _: TodoTaskSetPriorityProto  => TodoTaskUpdatePriorityManifest
-    case _: TodoTaskSetCompletedProto => TodoTaskCompleteTaskManifest
+    case _: TodoTaskSetPriorityProto  => TodoTaskSetPriorityManifest
+    case _: TodoTaskSetCompletedProto => TodoTaskSetCompletedManifest
+    case _: TodoTaskSetRemovedProto   => TodoTaskSetRemovedManifest
   }
 
   override def toBinary(o: AnyRef): Array[Byte] = o.asInstanceOf[GeneratedMessage].toByteArray
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     manifest match {
-      case TodoTaskSnapShotManifest       => TodoActorStateProto.parseFrom(bytes)
-      case TodoTaskAddManifest            => TodoTaskProto.parseFrom(bytes)
-      case TodoTaskUpdatePriorityManifest => TodoTaskSetPriorityProto.parseFrom(bytes)
-      case TodoTaskCompleteTaskManifest   => TodoTaskSetCompletedProto.parseFrom(bytes)
+      case TodoTaskSnapShotManifest     => TodoActorStateProto.parseFrom(bytes)
+      case TodoTaskAddManifest          => TodoTaskProto.parseFrom(bytes)
+      case TodoTaskSetPriorityManifest  => TodoTaskSetPriorityProto.parseFrom(bytes)
+      case TodoTaskSetCompletedManifest => TodoTaskSetCompletedProto.parseFrom(bytes)
     }
 }
 
 object TodoSerializer {
-  final val TodoTaskSnapShotManifest       = classOf[TodoActorStateProto].getName
-  final val TodoTaskAddManifest            = classOf[TodoTaskProto].getName
-  final val TodoTaskUpdatePriorityManifest = classOf[TodoTaskSetPriorityProto].getName
-  final val TodoTaskCompleteTaskManifest   = classOf[TodoTaskSetCompletedProto].getName
+  final val TodoTaskSnapShotManifest     = classOf[TodoActorStateProto].getName
+  final val TodoTaskAddManifest          = classOf[TodoTaskProto].getName
+  final val TodoTaskSetPriorityManifest  = classOf[TodoTaskSetPriorityProto].getName
+  final val TodoTaskSetCompletedManifest = classOf[TodoTaskSetCompletedProto].getName
+  final val TodoTaskSetRemovedManifest   = classOf[TodoTaskSetRemovedProto].getName
 
   def toProtobuf(todo: TodoTask): TodoTaskProto =
     TodoTaskProto(
-      userId    = todo.userId,
-      taskId    = todo.taskId,
-      title     = todo.title,
-      completed = todo.completed,
-      priority  = todo.priority
+      todo.userId,
+      todo.taskId,
+      todo.title,
+      todo.priority,
+      todo.completed,
+      todo.removed
     )
 
   def toProtobuf(state: TodoActorState): TodoActorStateProto =
     TodoActorStateProto.of(state.transform { (_, v) =>
       TodoTaskProto.of(
-        userId    = v.userId,
-        taskId    = v.taskId,
-        title     = v.title,
-        priority  = v.priority,
-        completed = v.completed
+        v.userId,
+        v.taskId,
+        v.title,
+        v.priority,
+        v.completed,
+        v.removed
       )
     })
 
@@ -66,16 +65,18 @@ object TodoSerializer {
         v.taskId,
         v.title,
         v.priority,
-        v.completed
+        v.completed,
+        v.removed
       )
     }
 
   def fromProtobuf(proto: TodoTaskProto): TodoTask =
     TodoTask(
-      userId    = proto.userId,
-      taskId    = proto.taskId,
-      title     = proto.title,
-      completed = proto.completed,
-      priority  = proto.priority
+      proto.userId,
+      proto.taskId,
+      proto.title,
+      proto.priority,
+      proto.completed,
+      proto.removed
     )
 }

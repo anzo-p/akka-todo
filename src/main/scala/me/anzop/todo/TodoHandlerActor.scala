@@ -4,12 +4,7 @@ import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import akka.util.Timeout
 import me.anzop.todo.TodoSerializer.{fromProtobuf, toProtobuf}
-import me.anzop.todo.todoProtocol.{
-  TodoActorStateProto,
-  TodoTaskProto,
-  TodoTaskSetCompletedProto,
-  TodoTaskSetPriorityProto
-}
+import me.anzop.todo.todoProtocol._
 
 import scala.concurrent.duration.DurationInt
 
@@ -20,6 +15,7 @@ object TodoHandlerActor {
   case class AddTodoTask(todo: TodoTaskParams) extends Command
   case class UpdatePriority(taskId: String, priority: Integer) extends Command
   case class UpdateCompleted(taskId: String) extends Command
+  case class RemoveTask(taskId: String) extends Command
   case object Shutdown
 
   type TodoActorState = Map[String, TodoTask]
@@ -35,6 +31,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   override def persistenceId: String = s"todo-actor-$userId"
 
   protected var state: TodoActorState = Map()
+
+  private def getTasks: Iterable[TodoTask] =
+    state.values.filterNot(_.removed)
 
   private def addTask(todo: TodoTask): Unit =
     state += todo.taskId -> todo
@@ -57,6 +56,15 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         true
     }
 
+  private def setRemoved(taskId: String): Boolean =
+    state.get(taskId) match {
+      case None =>
+        false
+      case Some(task) =>
+        state += taskId -> task.copy(removed = true)
+        true
+    }
+
   private def sortByPriority(todos: Iterable[TodoTask]): Iterable[TodoTask] =
     todos.toList.sortBy(_.priority)
 
@@ -65,11 +73,11 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
-      sender() ! sortByPriority(state.values)
+      sender() ! sortByPriority(getTasks)
 
     case GetTodoTasksByTitle(querySting) =>
       sender() ! sortByTitle {
-        state.values.filter(_.title contains querySting)
+        getTasks.filter(_.title contains querySting)
       }
 
     case AddTodoTask(params) =>
@@ -98,6 +106,14 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         }
       }
 
+    case RemoveTask(taskId) =>
+      persist(TodoTaskSetRemovedProto(taskId)) { _ =>
+        sender() ! setRemoved(taskId)
+        if (maybeSnapshot) {
+          saveSnapshot(toProtobuf(state))
+        }
+      }
+
     case SaveSnapshotSuccess(_) =>
     case SaveSnapshotFailure(_, reason) =>
       log.warning(s"Save snapshot failed on: $reason")
@@ -120,6 +136,9 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
     case data: TodoTaskSetCompletedProto =>
       setCompleted(data.taskId)
+
+    case data: TodoTaskSetRemovedProto =>
+      setRemoved(data.taskId)
   }
 
   override def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit = {
