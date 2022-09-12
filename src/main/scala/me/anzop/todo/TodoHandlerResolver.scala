@@ -30,11 +30,11 @@ trait TodoHandlerResolver {
     val wouldBeActor = s"todo-handler-$selector"
 
     if (activeActors.keys().asScala.toSet.contains(wouldBeActor)) {
-      activeActors.get(wouldBeActor).timeout.cancel()
-      val existingActor = activeActors.get(wouldBeActor).actor
-      activeActors.put(wouldBeActor, composeTimeout(wouldBeActor, existingActor))
+      val existing = activeActors.get(wouldBeActor)
+      existing.timeout.cancel()
+      activeActors.put(wouldBeActor, composeTimeout(wouldBeActor, existing.actor))
       system.log.info(s"discovered existing actor ${activeActors.get(wouldBeActor)}")
-      existingActor
+      existing.actor
 
     } else {
       val newActor = system.actorOf(Props(new TodoHandlerActor(selector)), wouldBeActor)
