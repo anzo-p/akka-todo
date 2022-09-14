@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.headers.{
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, StandardRoute}
 
-trait TodoRoutes extends TodoMarshalling with TodoService {
+trait TodoRoutes extends BaseRoutes with TodoService {
 
   private def updateSuccessOrNotFound(rowsAffected: Int): StandardRoute =
     rowsAffected match {
@@ -40,8 +40,10 @@ trait TodoRoutes extends TodoMarshalling with TodoService {
             }
           } ~ post {
             entity(as[TodoTaskDto]) { payload =>
-              onSuccess(addTodo(user, payload)) { todo =>
-                complete(StatusCodes.Created, toList(List(todo)))
+              validateRequest(payload) {
+                onSuccess(addTodo(user, payload)) { todo =>
+                  complete(StatusCodes.Created, toList(List(todo)))
+                }
               }
             }
           }

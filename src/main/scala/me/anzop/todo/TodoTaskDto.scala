@@ -1,7 +1,6 @@
 package me.anzop.todo
 
-import spray.json.DefaultJsonProtocol._
-import spray.json.RootJsonFormat
+import java.util.UUID
 
 case class TodoTaskDto(
     userId: String,
@@ -16,6 +15,10 @@ case class TodoTaskDto(
 }
 
 object TodoTaskDto {
+  import cats.implicits._
+  import me.anzop.todo.Validator._
+  import spray.json.DefaultJsonProtocol._
+  import spray.json.RootJsonFormat
 
   def fromModel(model: TodoTask): TodoTaskDto =
     TodoTaskDto(
@@ -25,6 +28,16 @@ object TodoTaskDto {
       completed = Some(model.completed),
       priority  = Some(model.priority)
     )
+
+  implicit val validator: Validator[TodoTaskDto] = (dto: TodoTaskDto) => {
+    (
+      accept(dto.userId),
+      accept(Some(UUID.randomUUID().toString)),
+      validateRequired(dto.title, "title"),
+      accept(dto.completed),
+      validateMinimum(dto.priority, 0, "priority")
+    ).mapN(TodoTaskDto.apply)
+  }
 
   implicit val jsonFormat: RootJsonFormat[TodoTaskDto] = jsonFormat5(TodoTaskDto.apply)
 }
