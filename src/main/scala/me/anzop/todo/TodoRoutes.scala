@@ -48,28 +48,32 @@ trait TodoRoutes extends BaseRoutes with TodoService {
             }
           }
         } ~ pathPrefix("task" / Segment) { task =>
-          pathPrefix("priority") {
-            pathEndOrSingleSlash {
-              patch {
-                entity(as[TodoPriorityDto]) { payload =>
-                  onSuccess(updatePriority(user, task, payload)) {
+          validateRequest(TaskIdDto(task)) {
+            pathPrefix("priority") {
+              pathEndOrSingleSlash {
+                patch {
+                  entity(as[TodoPriorityDto]) { payload =>
+                    validateRequest(payload) {
+                      onSuccess(updatePriority(user, task, payload)) {
+                        updateSuccessOrNotFound
+                      }
+                    }
+                  }
+                }
+              }
+            } ~ pathPrefix("complete") {
+              pathEndOrSingleSlash {
+                patch {
+                  onSuccess(updateCompleted(user, task)) {
                     updateSuccessOrNotFound
                   }
                 }
               }
-            }
-          } ~ pathPrefix("complete") {
-            pathEndOrSingleSlash {
-              patch {
-                onSuccess(updateCompleted(user, task)) {
+            } ~ pathEndOrSingleSlash {
+              delete {
+                onSuccess(removeTask(user, task)) {
                   updateSuccessOrNotFound
                 }
-              }
-            }
-          } ~ pathEndOrSingleSlash {
-            delete {
-              onSuccess(removeTask(user, task)) {
-                updateSuccessOrNotFound
               }
             }
           }
