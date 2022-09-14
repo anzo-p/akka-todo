@@ -35,35 +35,32 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   private def getTasks: Iterable[TodoTask] =
     state.values.filterNot(_.removed)
 
-  private def addTask(todo: TodoTask): Unit =
+  private def addReplaceTask(todo: TodoTask): Unit =
     state += todo.taskId -> todo
 
-  private def setPriority(taskId: String, priority: Int): Boolean =
-    state.get(taskId) match {
-      case None =>
-        false
-      case Some(task) =>
-        state += taskId -> task.copy(priority = priority)
-        true
-    }
+  private def setPriority(taskId: String, priority: Int): Int =
+    state
+      .get(taskId)
+      .fold(0) { task =>
+        addReplaceTask(task.copy(priority = priority))
+        1
+      }
 
-  private def setCompleted(taskId: String): Boolean =
-    state.get(taskId) match {
-      case None =>
-        false
-      case Some(task) =>
-        state += taskId -> task.copy(completed = true)
-        true
-    }
+  private def setCompleted(taskId: String): Int =
+    state
+      .get(taskId)
+      .fold(0) { task =>
+        addReplaceTask(task.copy(completed = true))
+        1
+      }
 
-  private def setRemoved(taskId: String): Boolean =
-    state.get(taskId) match {
-      case None =>
-        false
-      case Some(task) =>
-        state += taskId -> task.copy(removed = true)
-        true
-    }
+  private def setRemoved(taskId: String): Int =
+    state
+      .get(taskId)
+      .fold(0) { task =>
+        addReplaceTask(task.copy(removed = true))
+        1
+      }
 
   private def sortByPriority(todos: Iterable[TodoTask]): Iterable[TodoTask] =
     todos.toList.sortBy(_.priority)
@@ -86,7 +83,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
     case AddTodoTask(params) =>
       val todo = TodoTask(params).copy(userId = userId)
       persist(toProtobuf(todo)) { _ =>
-        addTask(todo)
+        addReplaceTask(todo)
         sender() ! todo
         maybeSaveSnapshot()
       }
@@ -123,7 +120,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
       log.info(s"from snapshots alles ok")
 
     case data: TodoTaskProto =>
-      addTask(fromProtobuf(data))
+      addReplaceTask(fromProtobuf(data))
       log.info(s"from replay events alles ok")
 
     case data: TodoTaskSetPriorityProto =>
