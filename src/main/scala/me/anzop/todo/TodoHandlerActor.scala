@@ -12,7 +12,7 @@ object TodoHandlerActor {
   sealed trait Command
   case object GetAllTodoTasks extends Command
   case class GetTodoTasksByTitle(querySting: String) extends Command
-  case class AddTodoTask(todo: TodoTaskParams) extends Command
+  case class AddTodoTask(todo: TodoTask) extends Command
   case class UpdatePriority(taskId: String, priority: Integer) extends Command
   case class UpdateCompleted(taskId: String) extends Command
   case class RemoveTask(taskId: String) extends Command
@@ -62,26 +62,22 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         1
       }
 
-  private def sortByPriority(todos: Iterable[TodoTask]): Iterable[TodoTask] =
-    todos.toList.sortBy(_.priority)
-
-  private def sortByTitle(todos: Iterable[TodoTask]): Iterable[TodoTask] =
-    todos.toList.sortBy(_.title)
-
   private def maybeSaveSnapshot(): Unit =
     if (maybeSnapshotDue) saveSnapshot(toProtobuf(state))
 
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
-      sender() ! sortByPriority(getTasks)
+      sender() ! getTasks
+        .toList
+        .sortBy(_.priority)
 
     case GetTodoTasksByTitle(querySting) =>
-      sender() ! sortByTitle {
-        getTasks.filter(_.title contains querySting)
-      }
+      sender() ! getTasks
+        .filter(_.title contains querySting)
+        .toList
+        .sortBy(_.priority)
 
-    case AddTodoTask(params) =>
-      val todo = TodoTask(params).copy(userId = userId)
+    case AddTodoTask(todo) =>
       persist(toProtobuf(todo)) { _ =>
         addReplaceTask(todo)
         sender() ! todo
@@ -117,11 +113,11 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   override def receiveRecover: Receive = {
     case SnapshotOffer(_, snapshot: TodoActorStateProto) =>
       state = fromProtobuf(snapshot)
-      log.info(s"from snapshots alles ok")
+      log.info(s"receiveRecover SnapshotOffer")
 
     case data: TodoTaskProto =>
       addReplaceTask(fromProtobuf(data))
-      log.info(s"from replay events alles ok")
+      log.info(s"receiveRecover TodoTaskProto")
 
     case data: TodoTaskSetPriorityProto =>
       setPriority(data.taskId, data.newPriority)

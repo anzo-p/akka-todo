@@ -2,22 +2,17 @@ package me.anzop.todo
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
-import akka.http.scaladsl.server.Directives.{parameter, _}
+import akka.http.scaladsl.model.headers.{
+  `Access-Control-Allow-Headers`,
+  `Access-Control-Allow-Methods`,
+  `Access-Control-Allow-Origin`
+}
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, StandardRoute}
-import akka.pattern.ask
-import akka.util.Timeout
 
-import scala.concurrent.duration.DurationInt
+trait TodoRoutes extends TodoMarshalling with TodoService {
 
-trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
-
-  implicit val timeout: Timeout = 2 seconds
-
-  def itemList(todos: Iterable[TodoTask]): Iterable[TodoTaskDto] =
-    todos.map(todo => TodoTaskDto.fromModel(todo))
-
-  def updateSuccessOrNotFound(rowsAffected: Int): StandardRoute =
+  private def updateSuccessOrNotFound(rowsAffected: Int): StandardRoute =
     rowsAffected match {
       case 0 =>
         complete(StatusCodes.NotFound)
@@ -35,47 +30,43 @@ trait TodoRoutes extends TodoHandlerProvider with TodoMarshalling {
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
-              val query = TodoHandlerActor.GetTodoTasksByTitle(title)
-              onSuccess((todoHandler(user) ? query).mapTo[Iterable[TodoTask]]) { todos =>
-                complete(StatusCodes.OK, itemList(todos))
+              onSuccess(getAllTodos(user, title)) { todos =>
+                complete(StatusCodes.OK, toList(todos))
               }
             }
           } ~ get {
-            val query = TodoHandlerActor.GetAllTodoTasks
-            onSuccess((todoHandler(user) ? query).mapTo[Iterable[TodoTask]]) { todos =>
-              complete(StatusCodes.OK, itemList(todos))
+            onSuccess(getTodo(user)) { todos =>
+              complete(StatusCodes.OK, toList(todos))
             }
           } ~ post {
-            entity(as[TodoTaskDto]) { input =>
-              val query = TodoHandlerActor.AddTodoTask(input.toParams)
-              onSuccess((todoHandler(user) ? query).mapTo[TodoTask]) { todo =>
-                complete(StatusCodes.Created, itemList(List(todo)))
+            entity(as[TodoTaskDto]) { payload =>
+              onSuccess(addTodo(user, payload)) { todo =>
+                complete(StatusCodes.Created, toList(List(todo)))
               }
             }
           }
         } ~ pathPrefix("task" / Segment) { task =>
-          pathPrefix("priority" / IntNumber) { priority =>
+          pathPrefix("priority") {
             pathEndOrSingleSlash {
               patch {
-                val query = TodoHandlerActor.UpdatePriority(task, priority)
-                onSuccess((todoHandler(user) ? query).mapTo[Int]) {
-                  updateSuccessOrNotFound
+                entity(as[TodoPriorityDto]) { payload =>
+                  onSuccess(updatePriority(user, task, payload)) {
+                    updateSuccessOrNotFound
+                  }
                 }
               }
             }
           } ~ pathPrefix("complete") {
             pathEndOrSingleSlash {
               patch {
-                val cmd = TodoHandlerActor.UpdateCompleted(task)
-                onSuccess((todoHandler(user) ? cmd).mapTo[Int]) {
+                onSuccess(updateCompleted(user, task)) {
                   updateSuccessOrNotFound
                 }
               }
             }
           } ~ pathEndOrSingleSlash {
             delete {
-              val query = TodoHandlerActor.RemoveTask(task)
-              onSuccess((todoHandler(user) ? query).mapTo[Int]) {
+              onSuccess(removeTask(user, task)) {
                 updateSuccessOrNotFound
               }
             }
