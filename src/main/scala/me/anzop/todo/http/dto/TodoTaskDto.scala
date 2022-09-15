@@ -1,4 +1,6 @@
-package me.anzop.todo
+package me.anzop.todo.http.dto
+
+import me.anzop.todo.models.{TodoTask, TodoTaskParams}
 
 import java.util.UUID
 
@@ -16,18 +18,11 @@ case class TodoTaskDto(
 
 object TodoTaskDto {
   import cats.implicits._
-  import me.anzop.todo.Validator._
+  import me.anzop.todo.http.validation.Validation._
   import spray.json.DefaultJsonProtocol._
   import spray.json.RootJsonFormat
 
-  def fromModel(model: TodoTask): TodoTaskDto =
-    TodoTaskDto(
-      userId    = model.userId,
-      taskId    = Some(model.taskId),
-      title     = model.title,
-      completed = Some(model.completed),
-      priority  = Some(model.priority)
-    )
+  implicit val jsonFormat: RootJsonFormat[TodoTaskDto] = jsonFormat5(TodoTaskDto.apply)
 
   implicit val validator: Validator[TodoTaskDto] = (dto: TodoTaskDto) => {
     (
@@ -39,5 +34,15 @@ object TodoTaskDto {
     ).mapN(TodoTaskDto.apply)
   }
 
-  implicit val jsonFormat: RootJsonFormat[TodoTaskDto] = jsonFormat5(TodoTaskDto.apply)
+  def fromModel(model: TodoTask): TodoTaskDto =
+    TodoTaskDto(
+      userId    = model.userId,
+      taskId    = Some(model.taskId),
+      title     = model.title,
+      completed = Some(model.completed),
+      priority  = Some(model.priority)
+    )
+
+  def toList(todos: Iterable[TodoTask]): Iterable[TodoTaskDto] =
+    todos.map(todo => TodoTaskDto.fromModel(todo))
 }

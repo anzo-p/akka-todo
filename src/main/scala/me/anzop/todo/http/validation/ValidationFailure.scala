@@ -1,4 +1,4 @@
-package me.anzop.todo
+package me.anzop.todo.http.validation
 
 sealed trait ValidationFailure {
   def errorMessage: String

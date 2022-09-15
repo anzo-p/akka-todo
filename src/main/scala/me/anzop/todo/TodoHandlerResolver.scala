@@ -1,6 +1,7 @@
 package me.anzop.todo
 
 import akka.actor.{ActorRef, ActorSystem, Cancellable, Props}
+import me.anzop.todo.actor.TodoHandlerActor
 
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter

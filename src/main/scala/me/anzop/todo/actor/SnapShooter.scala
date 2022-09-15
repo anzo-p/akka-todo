@@ -1,4 +1,4 @@
-package me.anzop.todo
+package me.anzop.todo.actor
 
 trait SnapShooter {
   def snapshotInterval: Int

@@ -1,5 +1,6 @@
-package me.anzop.todo
+package me.anzop.todo.actor
 
+import me.anzop.todo.models.TodoTask
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
 

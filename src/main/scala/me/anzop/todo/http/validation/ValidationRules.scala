@@ -1,6 +1,6 @@
-package me.anzop.todo
+package me.anzop.todo.http.validation
 
-object ValidationRules {
+trait ValidationRules {
   trait Required[A] extends (A => Boolean)
 
   trait UUIDRequired[A] extends (A => Boolean)

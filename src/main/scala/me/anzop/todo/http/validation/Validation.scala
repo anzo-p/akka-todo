@@ -1,15 +1,10 @@
-package me.anzop.todo
+package me.anzop.todo.http.validation
 
 import cats.data.ValidatedNel
-import cats.implicits._
-import me.anzop.todo.ValidationRules._
+import cats.implicits.catsSyntaxValidatedId
 
-object Validator {
+trait ValidationAPI extends ValidationRules {
   type ValidationResult[A] = ValidatedNel[ValidationFailure, A]
-
-  trait Validator[A] {
-    def validate(value: A): ValidationResult[A]
-  }
 
   def accept[A](input: A): ValidationResult[A] =
     input.validNel
@@ -33,6 +28,13 @@ object Validator {
       case false if threshold == 0 => NegativeValue(fieldName).invalidNel
       case true                    => input.validNel
     }
+}
+
+object Validation extends ValidationAPI {
+
+  trait Validator[A] {
+    def validate(value: A): ValidationResult[A]
+  }
 
   def validateInput[A](input: A)(implicit validator: Validator[A]): ValidationResult[A] = validator.validate(input)
 }

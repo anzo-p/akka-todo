@@ -1,4 +1,4 @@
-package me.anzop.todo
+package me.anzop.todo.models
 
 case class TodoTaskParams(
     userId: String,

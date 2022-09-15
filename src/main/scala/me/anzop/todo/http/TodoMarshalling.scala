@@ -1,4 +1,4 @@
-package me.anzop.todo
+package me.anzop.todo.http
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol

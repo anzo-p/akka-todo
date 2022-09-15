@@ -1,9 +1,10 @@
-package me.anzop.todo
+package me.anzop.todo.actor
 
 import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import akka.util.Timeout
-import me.anzop.todo.TodoSerializer.{fromProtobuf, toProtobuf}
+import me.anzop.todo.actor.ProtobufConversions._
+import me.anzop.todo.models.TodoTask
 import me.anzop.todo.todoProtocol._
 
 import scala.concurrent.duration.DurationInt

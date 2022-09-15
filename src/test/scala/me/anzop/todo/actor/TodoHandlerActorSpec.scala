@@ -1,10 +1,10 @@
-package me.anzop.todo
+package me.anzop.todo.actor
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.ConfigFactory
-import me.anzop.todo.ArbitraryTasks.{sample, PositiveInteger, TodoTasks, UUIDString}
-import me.anzop.todo.TodoHandlerActor._
+import ArbitraryTasks.{sample, PositiveInteger, TodoTasks, UUIDString}
+import me.anzop.todo.actor.TodoHandlerActor._
 import me.anzop.todo.utils.BaseSpec
 import org.scalatest.BeforeAndAfterAll
 

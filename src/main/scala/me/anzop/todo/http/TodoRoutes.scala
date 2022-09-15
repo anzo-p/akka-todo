@@ -1,4 +1,4 @@
-package me.anzop.todo
+package me.anzop.todo.http
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.StatusCodes
@@ -9,6 +9,9 @@ import akka.http.scaladsl.model.headers.{
 }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, StandardRoute}
+import me.anzop.todo.TodoService
+import me.anzop.todo.http.dto.TodoTaskDto.toList
+import me.anzop.todo.http.dto._
 
 trait TodoRoutes extends BaseRoute with TodoService {
 
@@ -41,7 +44,7 @@ trait TodoRoutes extends BaseRoute with TodoService {
           } ~ post {
             entity(as[TodoTaskDto]) { payload =>
               validateRequest(payload) {
-                onSuccess(addTodo(user, payload)) { todo =>
+                onSuccess(addTodo(user, payload.toParams)) { todo =>
                   complete(StatusCodes.Created, toList(List(todo)))
                 }
               }
@@ -54,7 +57,7 @@ trait TodoRoutes extends BaseRoute with TodoService {
                 patch {
                   entity(as[TodoPriorityDto]) { payload =>
                     validateRequest(payload) {
-                      onSuccess(updatePriority(user, task, payload)) {
+                      onSuccess(updatePriority(user, task, payload.priority)) {
                         updateSuccessOrNotFound
                       }
                     }
