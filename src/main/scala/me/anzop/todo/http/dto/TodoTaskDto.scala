@@ -8,12 +8,12 @@ case class TodoTaskDto(
     userId: String,
     taskId: Option[String],
     title: String,
-    completed: Option[Boolean],
-    priority: Option[Int]
+    priority: Option[Int],
+    completed: Option[Boolean]
   ) {
 
   def toParams: TodoTaskParams =
-    TodoTaskParams(userId, title, completed, priority)
+    TodoTaskParams(userId, title, priority, completed)
 }
 
 object TodoTaskDto {
@@ -29,8 +29,8 @@ object TodoTaskDto {
       accept(dto.userId),
       accept(Some(UUID.randomUUID().toString)),
       validateRequired(dto.title, "title"),
-      accept(dto.completed),
-      validateMinimum(dto.priority, 0, "priority")
+      validateMinimum(dto.priority, 0, "priority"),
+      accept(dto.completed)
     ).mapN(TodoTaskDto.apply)
   }
 
@@ -39,8 +39,8 @@ object TodoTaskDto {
       userId    = model.userId,
       taskId    = Some(model.taskId),
       title     = model.title,
-      completed = Some(model.completed),
-      priority  = Some(model.priority)
+      priority  = Some(model.priority),
+      completed = Some(model.completed)
     )
 
   def toList(todos: Iterable[TodoTask]): Iterable[TodoTaskDto] =

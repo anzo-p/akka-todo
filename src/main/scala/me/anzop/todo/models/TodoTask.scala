@@ -5,28 +5,30 @@ import java.util.UUID
 case class TodoTask(
     userId: String,
     taskId: String,
-    title: String      = "",
-    priority: Int      = 0,
-    completed: Boolean = false,
-    removed: Boolean   = false
+    title: String,
+    priority: Int,
+    completed: Boolean,
+    removed: Boolean = false
   )
 
 object TodoTask {
 
   def apply(params: TodoTaskParams): TodoTask =
     TodoTask(
-      userId = params.userId,
-      taskId = UUID.randomUUID().toString,
-      title  = params.title
+      userId    = params.userId,
+      taskId    = UUID.randomUUID().toString,
+      title     = params.title,
+      priority  = params.priority.getOrElse(0),
+      completed = params.completed.getOrElse(false)
     )
 
-  def apply(item: TodoTask, params: TodoTaskParams): TodoTask =
+  def apply(existingTask: TodoTask, params: TodoTaskParams): TodoTask =
     TodoTask(
-      userId    = item.userId,
-      taskId    = item.taskId,
+      userId    = existingTask.userId,
+      taskId    = existingTask.taskId,
       title     = params.title,
-      priority  = params.priority.getOrElse(item.priority),
-      completed = params.completed.getOrElse(item.completed),
-      removed   = params.completed.getOrElse(item.removed)
+      priority  = params.priority.getOrElse(existingTask.priority),
+      completed = params.completed.getOrElse(existingTask.completed),
+      removed   = existingTask.removed
     )
 }

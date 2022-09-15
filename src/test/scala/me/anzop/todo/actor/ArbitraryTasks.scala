@@ -10,14 +10,34 @@ object ArbitraryTasks {
 
   case class UUIDString(value: String) extends AnyVal
 
-  case class TodoTasks(tasks: List[TodoTask])
+  case class OneTodoTask(task: TodoTask)
+
+  case class SeveralTodoTasks(tasks: List[TodoTask])
+
+  implicit val arbitraryPositiveInteger: Arbitrary[PositiveInteger] = Arbitrary {
+    Gen.posNum[Int].map(PositiveInteger)
+  }
 
   implicit val arbitraryUUID: Arbitrary[UUIDString] = Arbitrary {
     Gen.uuid.map(id => UUIDString(id.toString)).retryUntil(_.value.nonEmpty)
   }
 
-  implicit val arbitraryPositiveInteger: Arbitrary[PositiveInteger] = Arbitrary {
-    Gen.posNum[Int].map(PositiveInteger)
+  implicit val arbitraryTodoTask: Arbitrary[OneTodoTask] = Arbitrary {
+    for {
+      userId <- arbitrary[UUIDString]
+      task   <- generateTodoTask(userId.value)
+    } yield {
+      OneTodoTask(task)
+    }
+  }
+
+  implicit val arbitraryListOfTodoTasks: Arbitrary[SeveralTodoTasks] = Arbitrary {
+    for {
+      userId <- arbitrary[UUIDString]
+      tasks  <- Gen.listOfN(4, generateTodoTask(userId.value))
+    } yield {
+      SeveralTodoTasks(tasks)
+    }
   }
 
   def generateTodoTask(userId: String): Gen[TodoTask] =
@@ -35,15 +55,6 @@ object ArbitraryTasks {
         completed = completed
       )
     }
-
-  implicit val arbitraryListOfTodoTasks: Arbitrary[TodoTasks] = Arbitrary {
-    for {
-      userId <- arbitrary[UUIDString]
-      tasks  <- Gen.listOfN(4, generateTodoTask(userId.value))
-    } yield {
-      TodoTasks(tasks)
-    }
-  }
 
   def sample[A : Arbitrary]: A = arbitrary[A].sample.get
 }
