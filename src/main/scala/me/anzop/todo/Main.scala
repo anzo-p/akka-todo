@@ -3,6 +3,7 @@ package me.anzop.todo
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
+import me.anzop.todo.actor.TodoHandlerResolver
 import me.anzop.todo.http.TodoRoutes
 
 import scala.concurrent.ExecutionContextExecutor
