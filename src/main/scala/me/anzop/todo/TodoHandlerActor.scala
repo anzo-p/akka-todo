@@ -12,6 +12,7 @@ object TodoHandlerActor {
   sealed trait Command
   case object GetAllTodoTasks extends Command
   case class GetTodoTasksByTitle(querySting: String) extends Command
+  case class GetTodoTaskById(taskId: String) extends Command
   case class AddTodoTask(todo: TodoTask) extends Command
   case class UpdatePriority(taskId: String, priority: Integer) extends Command
   case class UpdateCompleted(taskId: String) extends Command
@@ -32,8 +33,13 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   protected var state: TodoActorState = Map()
 
-  private def getTasks: Iterable[TodoTask] =
-    state.values.filterNot(_.removed)
+  private def getTasks(excludeRemoved: Boolean = true): Iterable[TodoTask] = {
+    if (excludeRemoved) {
+      state.values.filterNot(_.removed)
+    } else {
+      state.values
+    }
+  }
 
   private def addReplaceTask(todo: TodoTask): Unit =
     state += todo.taskId -> todo
@@ -67,15 +73,19 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
 
   override def receiveCommand: Receive = {
     case GetAllTodoTasks =>
-      sender() ! getTasks
+      sender() ! getTasks()
         .toList
         .sortBy(_.priority)
 
     case GetTodoTasksByTitle(querySting) =>
-      sender() ! getTasks
+      sender() ! getTasks()
         .filter(_.title contains querySting)
         .toList
-        .sortBy(_.priority)
+        .sortBy(_.title)
+
+    case GetTodoTaskById(taskId) =>
+      sender() ! getTasks(excludeRemoved = false)
+        .find(_.taskId == taskId)
 
     case AddTodoTask(todo) =>
       persist(toProtobuf(todo)) { _ =>
