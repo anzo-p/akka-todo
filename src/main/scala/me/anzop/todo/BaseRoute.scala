@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import cats.data.Validated.{Invalid, Valid}
 import me.anzop.todo.Validator._
 
-trait BaseRoutes extends TodoMarshalling {
+trait BaseRoute extends TodoMarshalling {
 
   def validateRequest[R : Validator](payload: R)(routeWhenValid: Route): Route =
     validateInput(payload) match {

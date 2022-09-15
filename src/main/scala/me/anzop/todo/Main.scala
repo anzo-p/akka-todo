@@ -9,7 +9,7 @@ import scala.util._
 
 object Main extends App with TodoHandlerResolver with TodoRoutes {
 
-  implicit val system: ActorSystem                = ActorSystem()
+  implicit val system: ActorSystem                = ActorSystem("TodoAppActorSystem")
   implicit val executor: ExecutionContextExecutor = system.dispatcher
 
   val routes: Route = todoRoutes

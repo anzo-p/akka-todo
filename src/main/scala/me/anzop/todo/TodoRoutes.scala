@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.headers.{
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, StandardRoute}
 
-trait TodoRoutes extends BaseRoutes with TodoService {
+trait TodoRoutes extends BaseRoute with TodoService {
 
   private def updateSuccessOrNotFound(rowsAffected: Int): StandardRoute =
     rowsAffected match {
