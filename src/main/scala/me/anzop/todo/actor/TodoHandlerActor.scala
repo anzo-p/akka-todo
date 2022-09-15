@@ -23,14 +23,14 @@ object TodoHandlerActor {
   type TodoActorState = Map[String, TodoTask]
 }
 
-class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging with SnapShooter {
+class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging with SnapShootTally {
   import TodoHandlerActor._
 
-  implicit val timeout: Timeout = 10 seconds
-
-  override def snapshotInterval: Int = 10
+  implicit val timeout: Timeout = 3 seconds
 
   override def persistenceId: String = s"todo-actor-$userId"
+
+  override def snapshotInterval: Int = 10
 
   protected var state: TodoActorState = Map()
 

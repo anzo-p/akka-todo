@@ -1,6 +1,6 @@
 package me.anzop.todo.actor
 
-trait SnapShooter {
+trait SnapShootTally {
   def snapshotInterval: Int
   var countToSnapShot: Int = 0
 
