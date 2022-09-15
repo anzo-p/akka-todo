@@ -13,7 +13,7 @@ object ArbitraryTasks {
   case class TodoTasks(tasks: List[TodoTask])
 
   implicit val arbitraryUUID: Arbitrary[UUIDString] = Arbitrary {
-    Gen.uuid.map(id => UUIDString(id.toString))
+    Gen.uuid.map(id => UUIDString(id.toString)).retryUntil(_.value.nonEmpty)
   }
 
   implicit val arbitraryPositiveInteger: Arbitrary[PositiveInteger] = Arbitrary {
