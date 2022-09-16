@@ -27,17 +27,19 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"    %% "akka-http"                  % akkaHttpVersion,
   "com.typesafe.akka"    %% "akka-http-spray-json"       % akkaHttpVersion,
   "com.thesamet.scalapb" %% "scalapb-runtime"            % scalapb.compiler.Version.scalapbVersion % "protobuf",
-  "org.typelevel"        %% "cats-core"                  % catsVersion
+  "org.typelevel"        %% "cats-core"                  % catsVersion,
+  "org.slf4j"            % "slf4j-api"                   % "2.0.1",
+  "org.slf4j"            % "slf4j-simple"                % "2.0.1"
 )
 
 resolvers += Resolver.bintrayRepo("dnvriend", "maven")
 
 libraryDependencies ++= Seq(
   "org.scalatest"             %% "scalatest"                 % scalaTestVersion % Test,
+  "org.scalamock"             %% "scalamock"                 % "5.2.0" % Test,
+  "org.scalatestplus"         %% "scalacheck-1-15"           % "3.2.11.0" % Test,
   "com.typesafe.akka"         %% "akka-testkit"              % akkaVersion,
   "com.typesafe.akka"         %% "akka-http-testkit"         % akkaHttpVersion % "test",
-  "org.scalatestplus"         %% "scalacheck-1-15"           % "3.2.11.0" % Test,
-  "org.scalatestplus"         %% "mockito-3-4"               % mockitoVersion % Test,
   "com.github.dnvriend"       %% "akka-persistence-inmemory" % dnvriendInMemoryVersion,
   "org.iq80.leveldb"          % "leveldb"                    % "0.7",
   "org.fusesource.leveldbjni" % "leveldbjni-all"             % "1.8"

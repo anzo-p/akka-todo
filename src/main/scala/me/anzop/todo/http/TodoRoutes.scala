@@ -13,7 +13,7 @@ import me.anzop.todo.TodoService
 import me.anzop.todo.http.dto.TodoTaskDto.toList
 import me.anzop.todo.http.dto._
 
-trait TodoRoutes extends BaseRoute with TodoService {
+class TodoRoutes(val todoService: TodoService) extends BaseRoute {
 
   private def updateSuccessOrNotFound(rowsAffected: Int): StandardRoute =
     rowsAffected match {
@@ -23,7 +23,7 @@ trait TodoRoutes extends BaseRoute with TodoService {
         complete(StatusCodes.OK)
     }
 
-  def todoRoutes: Route = {
+  def routes: Route = {
     respondWithHeaders(
       `Access-Control-Allow-Origin`.`*`,
       `Access-Control-Allow-Headers`("Accept", "Content-Type"),
@@ -33,18 +33,18 @@ trait TodoRoutes extends BaseRoute with TodoService {
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
-              onSuccess(getAllTodosByTitle(user, title)) { todos =>
+              onSuccess(todoService.getAllTodosByTitle(user, title)) { todos =>
                 complete(StatusCodes.OK, toList(todos))
               }
             }
           } ~ get {
-            onSuccess(getAllTodos(user)) { todos =>
+            onSuccess(todoService.getAllTodos(user)) { todos =>
               complete(StatusCodes.OK, toList(todos))
             }
           } ~ post {
             entity(as[TodoTaskDto]) { payload =>
               validateRequest(payload) {
-                onSuccess(addTodo(user, payload.toParams)) { todo =>
+                onSuccess(todoService.addTodo(user, payload.toParams)) { todo =>
                   complete(StatusCodes.Created, toList(List(todo)))
                 }
               }
@@ -57,24 +57,24 @@ trait TodoRoutes extends BaseRoute with TodoService {
                 patch {
                   entity(as[TodoPriorityDto]) { payload =>
                     validateRequest(payload) {
-                      onSuccess(updatePriority(user, task, payload.priority)) {
+                      onSuccess(todoService.updatePriority(user, task, payload.priority)) {
                         updateSuccessOrNotFound
                       }
                     }
                   }
                 }
               }
-            } ~ pathPrefix("complete") {
+            } ~ pathPrefix("completed") {
               pathEndOrSingleSlash {
                 patch {
-                  onSuccess(updateCompleted(user, task)) {
+                  onSuccess(todoService.updateCompleted(user, task)) {
                     updateSuccessOrNotFound
                   }
                 }
               }
             } ~ pathEndOrSingleSlash {
               delete {
-                onSuccess(removeTask(user, task)) {
+                onSuccess(todoService.removeTask(user, task)) {
                   updateSuccessOrNotFound
                 }
               }
