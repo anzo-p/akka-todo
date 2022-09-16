@@ -1,8 +1,8 @@
 package me.anzop.todo.actor
 
 import akka.actor.Props
-import me.anzop.todo.actor.ArbitraryTasks.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
 import me.anzop.todo.actor.TodoHandlerActor._
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
 import me.anzop.todo.utils.BasePersistentActorSpec
 
 class TodoHandlerActorSpec extends BasePersistentActorSpec {
@@ -145,7 +145,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       expectMsg(Some(otherTask))
     }
 
-    "return 0 (affected rows when not matching by taskId" in {
+    "return 0 (affected rows when not matching any task" in {
       val actor = getActor
 
       tasks.foreach(task => actor ! AddTodoTask(task))
@@ -179,7 +179,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       expectMsg(Some(otherTask))
     }
 
-    "return 0 (affected rows when not matching by taskId" in {
+    "return 0 (affected rows when not matching any task" in {
       val actor = getActor
 
       tasks.foreach(task => actor ! AddTodoTask(task))
@@ -212,7 +212,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       expectMsg(Some(otherTask))
     }
 
-    "return 0 (affected rows when not matching by taskId" in {
+    "return 0 (affected rows when not matching any task" in {
       val actor = getActor
 
       tasks.foreach(task => actor ! AddTodoTask(task))

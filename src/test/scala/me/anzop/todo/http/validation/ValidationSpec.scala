@@ -1,8 +1,8 @@
 package me.anzop.todo.http.validation
 
 import cats.implicits.catsSyntaxValidatedId
-import me.anzop.todo.actor.ArbitraryTasks.{sample, PositiveInteger, UUIDString}
 import me.anzop.todo.http.validation.Validation._
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, UUIDString}
 import me.anzop.todo.utils.BaseSpec
 
 class ValidationSpec extends BaseSpec {

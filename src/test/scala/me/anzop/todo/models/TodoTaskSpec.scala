@@ -1,6 +1,6 @@
 package me.anzop.todo.models
 
-import me.anzop.todo.actor.ArbitraryTasks.{sample, OneTodoTask, PositiveInteger}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, OneTodoTask, PositiveInteger}
 import me.anzop.todo.utils.BaseSpec
 
 class TodoTaskSpec extends BaseSpec {

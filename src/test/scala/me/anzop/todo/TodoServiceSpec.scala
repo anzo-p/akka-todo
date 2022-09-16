@@ -1,10 +1,10 @@
 package me.anzop.todo
 
 import akka.actor.{ActorRef, Props}
-import me.anzop.todo.actor.ArbitraryTasks.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
 import me.anzop.todo.actor.TodoHandlerActor
 import me.anzop.todo.actor.TodoHandlerActor.GetTodoTaskById
 import me.anzop.todo.models.{TodoTask, TodoTaskParams}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
 import me.anzop.todo.utils.BasePersistentActorSpec
 
 class TodoServiceSpec extends BasePersistentActorSpec {
@@ -121,7 +121,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
   "updatePriority" should {
     val testPriority = sample[PositiveInteger].value
 
-    "update the priority of a task with a matching taskId and return 1 (row affected)" in {
+    "update the priority of a task when a matching task found, then return 1 (row affected)" in {
       addSampleTasks()
       val testTask = service.getAllTodos(userId).futureValue.head
 
@@ -133,7 +133,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
       expectMsg(Some(testTask.copy(priority = testPriority)))
     }
 
-    "return 0 rows affected when no matching taskId can be found" in {
+    "return 0 rows affected when no matching task found" in {
       addSampleTasks()
       val nonExistentTask = sample[UUIDString].value
 
@@ -142,7 +142,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
   }
 
   "updateCompleted" should {
-    "update the completed status of a task with a matching taskId and return 1 (row affected)" in {
+    "update the completed status of a task when a matching task found, then return 1 (row affected)" in {
       addSampleTasks()
       val testTask = service.getAllTodos(userId).futureValue.head
 
@@ -154,7 +154,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
       expectMsg(Some(testTask.copy(completed = true)))
     }
 
-    "return 0 rows affected when no matching taskId can be found" in {
+    "return 0 rows affected when no matching task found" in {
       addSampleTasks()
       val nonExistentTask = sample[UUIDString].value
 
@@ -163,7 +163,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
   }
 
   "removeTask" should {
-    "set the removed status to true of a task with a matching taskId and return 1 (row affected)" in {
+    "set the removed status to true of a task when a matching task found, then return 1 (row affected)" in {
       addSampleTasks()
       val testTask = service.getAllTodos(userId).futureValue.head
 
@@ -175,7 +175,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
       expectMsg(Some(testTask.copy(removed = true)))
     }
 
-    "return 0 rows affected when no matching taskId can be found" in {
+    "return 0 rows affected when no matching task found" in {
       addSampleTasks()
       val nonExistentTask = sample[UUIDString].value
 
