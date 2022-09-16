@@ -33,12 +33,12 @@ trait TodoRoutes extends BaseRoute with TodoService {
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
-              onSuccess(getAllTodos(user, title)) { todos =>
+              onSuccess(getAllTodosByTitle(user, title)) { todos =>
                 complete(StatusCodes.OK, toList(todos))
               }
             }
           } ~ get {
-            onSuccess(getTodo(user)) { todos =>
+            onSuccess(getAllTodos(user)) { todos =>
               complete(StatusCodes.OK, toList(todos))
             }
           } ~ post {

@@ -1,22 +1,11 @@
 package me.anzop.todo.actor
 
-import akka.actor.{ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit}
-import com.typesafe.config.ConfigFactory
+import akka.actor.Props
 import me.anzop.todo.actor.ArbitraryTasks.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
 import me.anzop.todo.actor.TodoHandlerActor._
-import me.anzop.todo.utils.BaseSpec
-import org.scalatest.BeforeAndAfterAll
+import me.anzop.todo.utils.BasePersistentActorSpec
 
-class TodoHandlerActorSpec
-    extends TestKit(ActorSystem("TestActorSystem", ConfigFactory.load().getConfig("test")))
-    with BaseSpec
-    with ImplicitSender
-    with BeforeAndAfterAll {
-
-  override def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(system)
-  }
+class TodoHandlerActorSpec extends BasePersistentActorSpec {
 
   private val setup  = sample[SeveralTodoTasks]
   private val userId = setup.tasks.head.userId
