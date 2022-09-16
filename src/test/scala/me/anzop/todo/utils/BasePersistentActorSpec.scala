@@ -13,7 +13,7 @@ class BasePersistentActorSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
-  override def afterAll(): Unit = {
+  override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
 
