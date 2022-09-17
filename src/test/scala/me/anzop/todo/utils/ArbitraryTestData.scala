@@ -9,15 +9,15 @@ import java.util.UUID
 
 object ArbitraryTestData {
 
-  case class PositiveInteger(value: Int) extends AnyVal
+  case class PositiveInteger(value: Int)
 
-  case class Title(value: String) extends AnyVal
+  case class Title(value: String)
 
-  case class OneTodoTaskInput(task: TodoTaskDto) extends AnyVal
+  case class OneTodoTaskInput(task: TodoTaskDto)
 
-  case class OneTodoTask(task: TodoTask) extends AnyVal
+  case class OneTodoTask(task: TodoTask)
 
-  case class SeveralTodoTasks(tasks: List[TodoTask]) extends AnyVal
+  case class SeveralTodoTasks(tasks: List[TodoTask])
 
   implicit val arbitraryPositiveInteger: Arbitrary[PositiveInteger] = Arbitrary {
     Gen.posNum[Int].map(PositiveInteger)
