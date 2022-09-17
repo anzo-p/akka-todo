@@ -2,8 +2,10 @@ package me.anzop.todo.actor
 
 import akka.actor.Props
 import me.anzop.todo.actor.TodoHandlerActor._
-import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks, Title}
 import me.anzop.todo.utils.BasePersistentActorSpec
+
+import java.util.UUID
 
 class TodoHandlerActorSpec extends BasePersistentActorSpec {
 
@@ -42,7 +44,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       receiveN(4)
 
       val testTask        = allTasksAreActive(3)
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       actor ! GetTodoTaskById(testTask.taskId)
       expectMsg(Some(testTask))
@@ -64,7 +66,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
 
     "not return any removed tasks" in {
       val actor    = getActor
-      val randomId = sample[UUIDString].value
+      val randomId = sample[UUID]
       val testTask = allTasksAreActive.head.copy(taskId = randomId)
 
       actor ! AddTodoTask(testTask)
@@ -102,14 +104,14 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       actor ! GetTodoTasksByTitle("unds")
       expectMsg(List(taskSounds))
 
-      val nonExistentTask = sample[UUIDString].value
-      actor ! GetTodoTasksByTitle(nonExistentTask)
+      val nonExistentTask = sample[Title]
+      actor ! GetTodoTasksByTitle(nonExistentTask.value)
       expectMsg(List())
     }
 
     "not return any removed tasks" in {
       val actor    = getActor
-      val randomId = sample[UUIDString].value
+      val randomId = sample[UUID]
       val testTask = allTasksAreActive.head.copy(taskId = randomId, title = "same title all tasks")
 
       actor ! AddTodoTask(testTask)
@@ -151,7 +153,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       tasks.foreach(task => actor ! AddTodoTask(task))
       receiveN(4)
 
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
       val newPriority     = sample[PositiveInteger].value
 
       actor ! UpdatePriority(nonExistentTask, newPriority)
@@ -185,7 +187,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       tasks.foreach(task => actor ! AddTodoTask(task))
       receiveN(4)
 
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       actor ! UpdateCompleted(nonExistentTask)
       expectMsg(0)
@@ -218,7 +220,7 @@ class TodoHandlerActorSpec extends BasePersistentActorSpec {
       tasks.foreach(task => actor ! AddTodoTask(task))
       receiveN(4)
 
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       actor ! RemoveTask(nonExistentTask)
       expectMsg(0)

@@ -3,8 +3,8 @@ package me.anzop.todo.models
 import java.util.UUID
 
 case class TodoTask(
-    userId: String,
-    taskId: String,
+    userId: UUID,
+    taskId: UUID,
     title: String,
     priority: Int,
     completed: Boolean,
@@ -13,10 +13,10 @@ case class TodoTask(
 
 object TodoTask {
 
-  def apply(params: TodoTaskParams): TodoTask =
+  def apply(userId: UUID, params: TodoTaskParams): TodoTask =
     TodoTask(
-      userId    = params.userId,
-      taskId    = UUID.randomUUID().toString,
+      userId    = userId,
+      taskId    = UUID.randomUUID(),
       title     = params.title,
       priority  = params.priority.getOrElse(0),
       completed = params.completed.getOrElse(false)

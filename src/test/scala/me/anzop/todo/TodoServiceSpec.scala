@@ -4,13 +4,15 @@ import akka.actor.{ActorRef, Props}
 import me.anzop.todo.actor.TodoHandlerActor
 import me.anzop.todo.actor.TodoHandlerActor.GetTodoTaskById
 import me.anzop.todo.models.{TodoTask, TodoTaskParams}
-import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks, UUIDString}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, SeveralTodoTasks}
 import me.anzop.todo.utils.BasePersistentActorSpec
+
+import java.util.UUID
 
 class TodoServiceSpec extends BasePersistentActorSpec {
 
   private val service = new TodoService {
-    override def todoHandler(userIf: String): ActorRef =
+    override def todoHandler(userId: UUID): ActorRef =
       system.actorOf(Props(new TodoHandlerActor(userId)))
   }
 
@@ -26,7 +28,6 @@ class TodoServiceSpec extends BasePersistentActorSpec {
         .addTodo(
           userId,
           TodoTaskParams(
-            userId    = task.userId,
             title     = task.title,
             priority  = Some(task.priority),
             completed = Some(task.completed)
@@ -43,7 +44,6 @@ class TodoServiceSpec extends BasePersistentActorSpec {
           .addTodo(
             userId,
             TodoTaskParams(
-              userId    = task.userId,
               title     = task.title,
               priority  = Some(task.priority),
               completed = Some(task.completed)
@@ -94,7 +94,6 @@ class TodoServiceSpec extends BasePersistentActorSpec {
             .addTodo(
               userId,
               TodoTaskParams(
-                userId    = task.userId,
                 title     = s"$titleSearchKey $ix",
                 priority  = Some(task.priority),
                 completed = Some(task.completed)
@@ -135,7 +134,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
 
     "return 0 rows affected when no matching task found" in {
       addSampleTasks()
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       service.updatePriority(userId, nonExistentTask, testPriority).futureValue mustBe 0
     }
@@ -156,7 +155,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
 
     "return 0 rows affected when no matching task found" in {
       addSampleTasks()
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       service.updateCompleted(userId, nonExistentTask).futureValue mustBe 0
     }
@@ -177,7 +176,7 @@ class TodoServiceSpec extends BasePersistentActorSpec {
 
     "return 0 rows affected when no matching task found" in {
       addSampleTasks()
-      val nonExistentTask = sample[UUIDString].value
+      val nonExistentTask = sample[UUID]
 
       service.removeTask(userId, nonExistentTask).futureValue mustBe 0
     }

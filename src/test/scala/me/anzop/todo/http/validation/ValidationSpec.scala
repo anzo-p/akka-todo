@@ -2,8 +2,10 @@ package me.anzop.todo.http.validation
 
 import cats.implicits.catsSyntaxValidatedId
 import me.anzop.todo.http.validation.Validation._
-import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger, UUIDString}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, PositiveInteger}
 import me.anzop.todo.utils.BaseSpec
+
+import java.util.UUID
 
 class ValidationSpec extends BaseSpec {
 
@@ -23,7 +25,7 @@ class ValidationSpec extends BaseSpec {
 
   "validateUUID" should {
     "return valid for a proper UUID string" in {
-      val label  = sample[UUIDString].value
+      val label  = sample[UUID].toString
       val result = validateUUID(label, fieldName)
       result mustBe label.validNel
     }
@@ -37,7 +39,7 @@ class ValidationSpec extends BaseSpec {
       result mustBe NonUUIDField(fieldName).invalidNel
     }
     "return valid for an option of a proper UUID string" in {
-      val label  = sample[UUIDString].value
+      val label  = sample[UUID].toString
       val result = validateUUID(Option(label), fieldName)
       result mustBe Some(label).validNel
     }

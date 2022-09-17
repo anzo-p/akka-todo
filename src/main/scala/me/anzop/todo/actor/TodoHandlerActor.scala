@@ -7,23 +7,24 @@ import me.anzop.todo.actor.ProtobufConversions._
 import me.anzop.todo.models.TodoTask
 import me.anzop.todo.todoProtocol._
 
+import java.util.UUID
 import scala.concurrent.duration.DurationInt
 
 object TodoHandlerActor {
   sealed trait Command
   case object GetAllTodoTasks extends Command
   case class GetTodoTasksByTitle(querySting: String) extends Command
-  case class GetTodoTaskById(taskId: String) extends Command
+  case class GetTodoTaskById(taskId: UUID) extends Command
   case class AddTodoTask(todo: TodoTask) extends Command
-  case class UpdatePriority(taskId: String, priority: Integer) extends Command
-  case class UpdateCompleted(taskId: String) extends Command
-  case class RemoveTask(taskId: String) extends Command
+  case class UpdatePriority(taskId: UUID, priority: Integer) extends Command
+  case class UpdateCompleted(taskId: UUID) extends Command
+  case class RemoveTask(taskId: UUID) extends Command
   case object Shutdown
 
-  type TodoActorState = Map[String, TodoTask]
+  type TodoActorState = Map[UUID, TodoTask]
 }
 
-class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging with SnapShootTally {
+class TodoHandlerActor(userId: UUID) extends PersistentActor with ActorLogging with SnapShootTally {
   import TodoHandlerActor._
 
   implicit val timeout: Timeout = 3 seconds
@@ -45,7 +46,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
   private def addReplaceTask(todo: TodoTask): Unit =
     state += todo.taskId -> todo
 
-  private def setPriority(taskId: String, priority: Int): Int =
+  private def setPriority(taskId: UUID, priority: Int): Int =
     state
       .get(taskId)
       .fold(0) { task =>
@@ -53,7 +54,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         1
       }
 
-  private def setCompleted(taskId: String): Int =
+  private def setCompleted(taskId: UUID): Int =
     state
       .get(taskId)
       .fold(0) { task =>
@@ -61,7 +62,7 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
         1
       }
 
-  private def setRemoved(taskId: String): Int =
+  private def setRemoved(taskId: UUID): Int =
     state
       .get(taskId)
       .fold(0) { task =>
@@ -96,19 +97,19 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
       }
 
     case UpdatePriority(taskId, priority) =>
-      persist(TodoTaskSetPriorityProto(taskId, priority)) { _ =>
+      persist(TodoTaskSetPriorityProto(taskId.toString, priority)) { _ =>
         sender() ! setPriority(taskId, priority)
         maybeSaveSnapshot()
       }
 
     case UpdateCompleted(taskId) =>
-      persist(TodoTaskSetCompletedProto(taskId)) { _ =>
+      persist(TodoTaskSetCompletedProto(taskId.toString)) { _ =>
         sender() ! setCompleted(taskId)
         maybeSaveSnapshot()
       }
 
     case RemoveTask(taskId) =>
-      persist(TodoTaskSetRemovedProto(taskId)) { _ =>
+      persist(TodoTaskSetRemovedProto(taskId.toString)) { _ =>
         sender() ! setRemoved(taskId)
         maybeSaveSnapshot()
       }
@@ -131,13 +132,13 @@ class TodoHandlerActor(userId: String) extends PersistentActor with ActorLogging
       log.info(s"receiveRecover TodoTaskProto")
 
     case data: TodoTaskSetPriorityProto =>
-      setPriority(data.taskId, data.newPriority)
+      setPriority(UUID.fromString(data.taskId), data.newPriority)
 
     case data: TodoTaskSetCompletedProto =>
-      setCompleted(data.taskId)
+      setCompleted(UUID.fromString(data.taskId))
 
     case data: TodoTaskSetRemovedProto =>
-      setRemoved(data.taskId)
+      setRemoved(UUID.fromString(data.taskId))
   }
 
   override def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit = {

@@ -2,10 +2,8 @@ package me.anzop.todo.http.dto
 
 import me.anzop.todo.models.{TodoTask, TodoTaskParams}
 
-import java.util.UUID
-
 case class TodoTaskDto(
-    userId: String,
+    userId: Option[String],
     taskId: Option[String],
     title: String,
     priority: Option[Int],
@@ -13,7 +11,7 @@ case class TodoTaskDto(
   ) {
 
   def toParams: TodoTaskParams =
-    TodoTaskParams(userId, title, priority, completed)
+    TodoTaskParams(title, priority, completed)
 }
 
 object TodoTaskDto {
@@ -21,13 +19,12 @@ object TodoTaskDto {
   import me.anzop.todo.http.validation.Validation._
   import spray.json.DefaultJsonProtocol._
   import spray.json.RootJsonFormat
-
   implicit val jsonFormat: RootJsonFormat[TodoTaskDto] = jsonFormat5(TodoTaskDto.apply)
 
   implicit val validator: Validator[TodoTaskDto] = (dto: TodoTaskDto) => {
     (
-      accept(dto.userId),
-      accept(Some(UUID.randomUUID().toString)),
+      accept(Some("")),
+      accept(Some("")),
       validateRequired(dto.title, "title"),
       validateMinimum(dto.priority, 0, "priority"),
       accept(dto.completed)
@@ -36,8 +33,8 @@ object TodoTaskDto {
 
   def fromModel(model: TodoTask): TodoTaskDto =
     TodoTaskDto(
-      userId    = model.userId,
-      taskId    = Some(model.taskId),
+      userId    = Some(model.userId.toString),
+      taskId    = Some(model.taskId.toString),
       title     = model.title,
       priority  = Some(model.priority),
       completed = Some(model.completed)

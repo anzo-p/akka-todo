@@ -3,12 +3,15 @@ package me.anzop.todo.http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import me.anzop.todo.http.dto.{TodoPriorityDto, TodoTaskDto}
+import me.anzop.todo.http.system.{ErrorResponse, TodoMarshalling}
 import me.anzop.todo.http.validation.{EmptyField, NegativeValue}
 import me.anzop.todo.models.TodoTask
-import me.anzop.todo.utils.ArbitraryTestData.{sample, OneTodoTask, OneTodoTaskInput, PositiveInteger, Title, UUIDString}
+import me.anzop.todo.utils.ArbitraryTestData.{sample, OneTodoTask, OneTodoTaskInput, PositiveInteger, Title}
 import me.anzop.todo.utils.BaseSpec
 import me.anzop.todo.utils.mocks.TodoServiceMocks
 import org.scalamock.scalatest.MockFactory
+
+import java.util.UUID
 
 class TodoRoutesSpec
     extends BaseSpec
@@ -17,7 +20,7 @@ class TodoRoutesSpec
     with ScalatestRouteTest
     with TodoMarshalling {
 
-  private val userId = sample[UUIDString].value
+  private val userId = sample[UUID]
 
   private val todoRoutes = new TodoRoutes(mockTodoService).routes
 
@@ -98,22 +101,21 @@ class TodoRoutesSpec
       val payload = sample[OneTodoTaskInput].task
       val params  = payload.toParams
 
-      mockAddTodo(userId, params, TodoTask(params))
+      mockAddTodo(userId, params, TodoTask(userId, params))
 
       Post(s"/api/v1/todos/$userId", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.Created
         val body = entityAs[Iterable[TodoTaskDto]].head
-        body.userId mustBe payload.userId
         body.title mustBe payload.title
         body.priority mustBe payload.priority
         body.completed mustBe payload.completed
       }
     }
 
-    "400 - respond validation failures without processing any further - (currently applies to title and priority)" in {
+    "400 - respond validation failures without processing any further" in {
       val payload = TodoTaskDto(
-        userId    = sample[UUIDString].value,
-        taskId    = Some(sample[UUIDString].value),
+        userId    = Some(sample[UUID].toString),
+        taskId    = Some(sample[UUID].toString),
         title     = "",
         priority  = Some(sample[PositiveInteger].value * -1),
         completed = Some(sample[Boolean])
@@ -134,7 +136,7 @@ class TodoRoutesSpec
 
   "PATCH priority" should {
     "200 - store the priority change and respond success when matching task found" in {
-      val taskId  = sample[UUIDString].value
+      val taskId  = sample[UUID]
       val payload = TodoPriorityDto(sample[PositiveInteger].value)
 
       mockUpdatePriority(userId, taskId, payload.priority, 1)
@@ -144,8 +146,8 @@ class TodoRoutesSpec
       }
     }
 
-    "400 - respond validation failure without processing any further - priority cannot be negative" in {
-      val taskId  = sample[UUIDString].value
+    "400 - respond validation failure without processing any further" in {
+      val taskId  = sample[UUID]
       val payload = TodoPriorityDto(sample[PositiveInteger].value * -1)
 
       Patch(s"/api/v1/todos/$userId/task/$taskId/priority", payload) ~> todoRoutes ~> check {
@@ -160,7 +162,7 @@ class TodoRoutesSpec
     }
 
     "404 - respond not found when no matching task found" in {
-      val taskId  = sample[UUIDString].value
+      val taskId  = sample[UUID]
       val payload = TodoPriorityDto(sample[PositiveInteger].value)
 
       mockUpdatePriority(userId, taskId, payload.priority, 1)
@@ -173,7 +175,7 @@ class TodoRoutesSpec
 
   "PATCH completion" should {
     "200 - store the completion change and respond success when matching task found" in {
-      val taskId = sample[UUIDString].value
+      val taskId = sample[UUID]
 
       mockUpdateCompleted(userId, taskId, 1)
 
@@ -183,7 +185,7 @@ class TodoRoutesSpec
     }
 
     "404 - respond not found when no matching task found" in {
-      val taskId = sample[UUIDString].value
+      val taskId = sample[UUID]
 
       mockUpdateCompleted(userId, taskId, 1)
 
@@ -195,7 +197,7 @@ class TodoRoutesSpec
 
   "PATCH remove task" should {
     "200 - store the removal and respond success when matching task found" in {
-      val taskId = sample[UUIDString].value
+      val taskId = sample[UUID]
 
       mockRemoveTask(userId, taskId, 1)
 
@@ -205,7 +207,7 @@ class TodoRoutesSpec
     }
 
     "404 - respond not found when no matching task found" in {
-      val taskId = sample[UUIDString].value
+      val taskId = sample[UUID]
 
       mockRemoveTask(userId, taskId, 1)
 

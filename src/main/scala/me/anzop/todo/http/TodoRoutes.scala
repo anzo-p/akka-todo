@@ -12,6 +12,7 @@ import akka.http.scaladsl.server.{Route, StandardRoute}
 import me.anzop.todo.TodoService
 import me.anzop.todo.http.dto.TodoTaskDto.toList
 import me.anzop.todo.http.dto._
+import me.anzop.todo.http.system.BaseRoute
 
 class TodoRoutes(val todoService: TodoService) extends BaseRoute {
 
@@ -29,7 +30,7 @@ class TodoRoutes(val todoService: TodoService) extends BaseRoute {
       `Access-Control-Allow-Headers`("Accept", "Content-Type"),
       `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH, DELETE)
     ) {
-      pathPrefix("api" / "v1" / "todos" / Segment) { user =>
+      pathPrefix("api" / "v1" / "todos" / JavaUUID) { user =>
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
@@ -50,33 +51,31 @@ class TodoRoutes(val todoService: TodoService) extends BaseRoute {
               }
             }
           }
-        } ~ pathPrefix("task" / Segment) { task =>
-          validateRequest(TaskIdDto(task)) {
-            pathPrefix("priority") {
-              pathEndOrSingleSlash {
-                patch {
-                  entity(as[TodoPriorityDto]) { payload =>
-                    validateRequest(payload) {
-                      onSuccess(todoService.updatePriority(user, task, payload.priority)) {
-                        updateSuccessOrNotFound
-                      }
+        } ~ pathPrefix("task" / JavaUUID) { task =>
+          pathPrefix("priority") {
+            pathEndOrSingleSlash {
+              patch {
+                entity(as[TodoPriorityDto]) { payload =>
+                  validateRequest(payload) {
+                    onSuccess(todoService.updatePriority(user, task, payload.priority)) {
+                      updateSuccessOrNotFound
                     }
                   }
                 }
               }
-            } ~ pathPrefix("completed") {
-              pathEndOrSingleSlash {
-                patch {
-                  onSuccess(todoService.updateCompleted(user, task)) {
-                    updateSuccessOrNotFound
-                  }
-                }
-              }
-            } ~ pathEndOrSingleSlash {
-              delete {
-                onSuccess(todoService.removeTask(user, task)) {
+            }
+          } ~ pathPrefix("completed") {
+            pathEndOrSingleSlash {
+              patch {
+                onSuccess(todoService.updateCompleted(user, task)) {
                   updateSuccessOrNotFound
                 }
+              }
+            }
+          } ~ pathEndOrSingleSlash {
+            delete {
+              onSuccess(todoService.removeTask(user, task)) {
+                updateSuccessOrNotFound
               }
             }
           }

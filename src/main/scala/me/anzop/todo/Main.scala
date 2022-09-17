@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import me.anzop.todo.actor.TodoHandlerResolver
 import me.anzop.todo.http.TodoRoutes
 
+import java.util.UUID
 import scala.concurrent.ExecutionContextExecutor
 import scala.util._
 
@@ -13,7 +14,7 @@ object Main extends App with TodoHandlerResolver {
   implicit val system: ActorSystem                = ActorSystem("TodoAppActorSystem")
   implicit val executor: ExecutionContextExecutor = system.dispatcher
 
-  val todoRoutes = new TodoRoutes((userId: String) => todoHandler(userId))
+  val todoRoutes = new TodoRoutes((selector: UUID) => todoHandler(selector.toString))
 
   Http(system)
     .newServerAt("0.0.0.0", Properties.envOrElse("PORT", "8080").toInt)

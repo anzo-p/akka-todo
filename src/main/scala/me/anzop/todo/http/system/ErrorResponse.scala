@@ -1,4 +1,4 @@
-package me.anzop.todo.http
+package me.anzop.todo.http.system
 
 case class ErrorResponse(reason: List[String])
 

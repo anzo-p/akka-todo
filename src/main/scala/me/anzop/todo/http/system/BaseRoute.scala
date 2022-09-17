@@ -1,10 +1,10 @@
-package me.anzop.todo.http
+package me.anzop.todo.http.system
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Route
 import cats.data.Validated.{Invalid, Valid}
-import me.anzop.todo.http.validation.Validation._
+import me.anzop.todo.http.validation.Validation.{validateInput, Validator}
 
 trait BaseRoute extends TodoMarshalling {
 

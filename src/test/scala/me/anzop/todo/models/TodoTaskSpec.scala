@@ -3,34 +3,34 @@ package me.anzop.todo.models
 import me.anzop.todo.utils.ArbitraryTestData.{sample, OneTodoTask, PositiveInteger}
 import me.anzop.todo.utils.BaseSpec
 
+import java.util.UUID
+
 class TodoTaskSpec extends BaseSpec {
 
   "TodoTask.apply" should {
     "apply create itself out of TodoTaskParams" when {
+      val userId = sample[UUID]
+
       "fully populated" in {
         val params = TodoTaskParams(
-          userId    = sample[String],
           title     = sample[String],
           priority  = Some(sample[PositiveInteger].value),
           completed = Some(sample[Boolean])
         )
-        val todo = TodoTask(params)
+        val todo = TodoTask(userId, params)
 
-        todo.userId mustBe params.userId
         todo.title mustBe params.title
         todo.priority mustBe params.priority.get
         todo.completed mustBe params.completed.get
       }
       "optional fields" in {
         val params = TodoTaskParams(
-          userId    = sample[String],
           title     = sample[String],
           priority  = None,
           completed = None
         )
-        val todo = TodoTask(params)
+        val todo = TodoTask(userId, params)
 
-        todo.userId mustBe params.userId
         todo.title mustBe params.title
         todo.priority mustBe 0
         todo.completed mustBe false
@@ -42,7 +42,6 @@ class TodoTaskSpec extends BaseSpec {
 
       "fully populated" in {
         val params = TodoTaskParams(
-          userId    = sample[String],
           title     = sample[String],
           priority  = Some(sample[PositiveInteger].value),
           completed = Some(sample[Boolean])
@@ -58,7 +57,6 @@ class TodoTaskSpec extends BaseSpec {
       }
       "optional fields" in {
         val params = TodoTaskParams(
-          userId    = sample[String],
           title     = sample[String],
           completed = None,
           priority  = None
