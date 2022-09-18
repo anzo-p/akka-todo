@@ -1,4 +1,4 @@
-name := "akka-quickstart-scala"
+name := "todoapp"
 
 version := "1.0"
 

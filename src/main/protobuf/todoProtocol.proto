@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package me.anzop.todo;
+package com.anzop.todo;
 
 message TodoTaskProto {
   string userId = 1;
