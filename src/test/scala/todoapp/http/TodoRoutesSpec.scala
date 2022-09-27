@@ -29,7 +29,7 @@ class TodoRoutesSpec
     "200 - respond an empty list when no data" in {
       mockGetAllTodos(userId, List())
 
-      Get(s"/api/v1/todos/$userId") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List()
       }
@@ -40,7 +40,7 @@ class TodoRoutesSpec
 
       mockGetAllTodos(userId, List(task1))
 
-      Get(s"/api/v1/todos/$userId") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List(TodoTaskDto.fromModel(task1))
       }
@@ -52,7 +52,7 @@ class TodoRoutesSpec
 
       mockGetAllTodos(userId, List(task1, task2))
 
-      Get(s"/api/v1/todos/$userId") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List(TodoTaskDto.fromModel(task1), TodoTaskDto.fromModel(task2))
       }
@@ -65,7 +65,7 @@ class TodoRoutesSpec
     "200 - respond an empty list when no data" in {
       mockGetAllTodosByTitle(userId, testTitle, List())
 
-      Get(s"/api/v1/todos/$userId?title=$testTitle") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId?title=$testTitle") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List()
       }
@@ -76,7 +76,7 @@ class TodoRoutesSpec
 
       mockGetAllTodosByTitle(userId, testTitle, List(task1))
 
-      Get(s"/api/v1/todos/$userId?title=$testTitle") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId?title=$testTitle") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List(TodoTaskDto.fromModel(task1))
       }
@@ -88,7 +88,7 @@ class TodoRoutesSpec
 
       mockGetAllTodosByTitle(userId, testTitle, List(task1, task2))
 
-      Get(s"/api/v1/todos/$userId?title=$testTitle") ~> todoRoutes ~> check {
+      Get(s"/api/v1/todos/users/$userId?title=$testTitle") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
         entityAs[Iterable[TodoTaskDto]] mustBe List(TodoTaskDto.fromModel(task1), TodoTaskDto.fromModel(task2))
       }
@@ -103,7 +103,7 @@ class TodoRoutesSpec
 
       mockAddTodo(userId, params, TodoTask(userId, params))
 
-      Post(s"/api/v1/todos/$userId", payload) ~> todoRoutes ~> check {
+      Post(s"/api/v1/todos/users/$userId", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.Created
         val body = entityAs[Iterable[TodoTaskDto]].head
         body.title mustBe payload.title
@@ -121,7 +121,7 @@ class TodoRoutesSpec
         completed = Some(sample[Boolean])
       )
 
-      Post(s"/api/v1/todos/$userId", payload) ~> todoRoutes ~> check {
+      Post(s"/api/v1/todos/users/$userId", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.BadRequest
 
         val body = entityAs[ErrorResponse]
@@ -141,7 +141,7 @@ class TodoRoutesSpec
 
       mockUpdatePriority(userId, taskId, payload.priority, 1)
 
-      Patch(s"/api/v1/todos/$userId/task/$taskId/priority", payload) ~> todoRoutes ~> check {
+      Patch(s"/api/v1/todos/users/$userId/tasks/$taskId/priority", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }
@@ -150,7 +150,7 @@ class TodoRoutesSpec
       val taskId  = sample[UUID]
       val payload = TodoPriorityDto(sample[PositiveInteger].value * -1)
 
-      Patch(s"/api/v1/todos/$userId/task/$taskId/priority", payload) ~> todoRoutes ~> check {
+      Patch(s"/api/v1/todos/users/$userId/tasks/$taskId/priority", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.BadRequest
 
         val body = entityAs[ErrorResponse]
@@ -167,7 +167,7 @@ class TodoRoutesSpec
 
       mockUpdatePriority(userId, taskId, payload.priority, 1)
 
-      Patch(s"/api/v1/todos/$userId/task/$taskId/priority", payload) ~> todoRoutes ~> check {
+      Patch(s"/api/v1/todos/users/$userId/tasks/$taskId/priority", payload) ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }
@@ -179,7 +179,7 @@ class TodoRoutesSpec
 
       mockUpdateCompleted(userId, taskId, 1)
 
-      Patch(s"/api/v1/todos/$userId/task/$taskId/completed") ~> todoRoutes ~> check {
+      Patch(s"/api/v1/todos/users/$userId/tasks/$taskId/completed") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }
@@ -189,7 +189,7 @@ class TodoRoutesSpec
 
       mockUpdateCompleted(userId, taskId, 1)
 
-      Patch(s"/api/v1/todos/$userId/task/$taskId/completed") ~> todoRoutes ~> check {
+      Patch(s"/api/v1/todos/users/$userId/tasks/$taskId/completed") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }
@@ -201,7 +201,7 @@ class TodoRoutesSpec
 
       mockRemoveTask(userId, taskId, 1)
 
-      Delete(s"/api/v1/todos/$userId/task/$taskId") ~> todoRoutes ~> check {
+      Delete(s"/api/v1/todos/users/$userId/tasks/$taskId") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }
@@ -211,7 +211,7 @@ class TodoRoutesSpec
 
       mockRemoveTask(userId, taskId, 1)
 
-      Delete(s"/api/v1/todos/$userId/task/$taskId") ~> todoRoutes ~> check {
+      Delete(s"/api/v1/todos/users/$userId/tasks/$taskId") ~> todoRoutes ~> check {
         status mustBe StatusCodes.OK
       }
     }

@@ -30,7 +30,7 @@ class TodoRoutes(val todoService: TodoService) extends BaseRoute {
       `Access-Control-Allow-Headers`("Accept", "Content-Type"),
       `Access-Control-Allow-Methods`(GET, POST, PUT, PATCH, DELETE)
     ) {
-      pathPrefix("api" / "v1" / "todos" / JavaUUID) { user =>
+      pathPrefix("api" / "v1" / "todos" / "users" / JavaUUID) { user =>
         pathEndOrSingleSlash {
           parameter('title) { title =>
             get {
@@ -51,7 +51,7 @@ class TodoRoutes(val todoService: TodoService) extends BaseRoute {
               }
             }
           }
-        } ~ pathPrefix("task" / JavaUUID) { task =>
+        } ~ pathPrefix("tasks" / JavaUUID) { task =>
           pathPrefix("priority") {
             pathEndOrSingleSlash {
               patch {
